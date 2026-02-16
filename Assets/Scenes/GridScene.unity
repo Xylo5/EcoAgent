@@ -205,13 +205,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.53729963, y: 0, z: 0, w: 0.8433915}
+  m_LocalPosition: {x: 10, y: 100, z: -60}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 65, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,84 +383,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1001 &564841846
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1243407291561038915, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_Name
-      value: Building Sky_big_color03
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.000000021855694
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6851541358090402293, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1243407291561038915, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 564841848}
-  m_SourcePrefab: {fileID: 100100000, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
---- !u!1 &564841847 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1243407291561038915, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
-  m_PrefabInstance: {fileID: 564841846}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &564841848
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 564841847}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe7ca996addf5cf4895444201283c7cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Building
-  pollution: 10
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -699,8 +621,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ac8fc9f224e7ff49873a22208f53d5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingPlacement
-  buildingPrefab: {fileID: 0}
-  gridManager: {fileID: 0}
+  buildingPrefab: {fileID: 1243407291561038915, guid: 809e1ecca6bbda240b4db5d4fb127209, type: 3}
+  gridManager: {fileID: 855819030}
 --- !u!4 &2146918119
 Transform:
   m_ObjectHideFlags: 0
@@ -710,7 +632,7 @@ Transform:
   m_GameObject: {fileID: 2146918117}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -11.80556, y: -0, z: -3.60829}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -726,4 +648,3 @@ SceneRoots:
   - {fileID: 1032456300}
   - {fileID: 855819031}
   - {fileID: 2146918119}
-  - {fileID: 564841846}
