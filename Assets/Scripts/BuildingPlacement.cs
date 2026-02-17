@@ -1,24 +1,38 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class BuildingPlacement : MonoBehaviour
 {
     public GameObject buildingPrefab;
     public GridManager gridManager;
 
-    void Update()
+    private PlayerInputActions inputActions;
+
+    private void Awake()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            PlaceBuilding();
-        }
+        inputActions = new PlayerInputActions();
     }
 
-    void PlaceBuilding()
+    private void OnEnable()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
+        inputActions.Player.Place.performed += OnPlace;
+        inputActions.Enable();
+    }
 
-        if (Physics.Raycast(ray, out hit))
+    private void OnDisable()
+    {
+        inputActions.Player.Place.performed -= OnPlace;
+        inputActions.Disable();
+    }
+
+    private void OnPlace(InputAction.CallbackContext context)
+    {
+        Debug.Log("Click detected");
+
+        Vector2 mousePosition = Mouse.current.position.ReadValue();
+        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
             Vector2Int gridPos = gridManager.GetGridPosition(hit.point);
             Vector3 worldPos = gridManager.GetWorldPosition(gridPos.x, gridPos.y);
