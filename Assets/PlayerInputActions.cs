@@ -105,7 +105,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""3cb99627-44ae-4ba5-80f9-817356cf7961"",
+                    ""id"": ""380cbcb5-8d39-40ab-bbbb-90de2f552004"",
                     ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
