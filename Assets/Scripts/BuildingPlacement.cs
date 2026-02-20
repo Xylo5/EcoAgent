@@ -10,19 +10,21 @@ public class BuildingPlacement : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log("Input system initialized");
         inputActions = new PlayerInputActions();
     }
 
     private void OnEnable()
     {
+        // Enable only the Player action map
+        inputActions.Player.Enable();
         inputActions.Player.Place.performed += OnPlace;
-        inputActions.Enable();
     }
 
     private void OnDisable()
     {
         inputActions.Player.Place.performed -= OnPlace;
-        inputActions.Disable();
+        inputActions.Player.Disable();
     }
 
     private void OnPlace(InputAction.CallbackContext context)
