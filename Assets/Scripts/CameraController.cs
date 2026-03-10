@@ -11,12 +11,12 @@ public class CameraController : MonoBehaviour
     public Terrain terrain;
 
     [Header("Movement")]
-    public float panSpeed = 50f;
+    public float panSpeed = 40f;
 
     [Header("Zoom")]
-    public float zoomSpeed = 60f;
-    public float minY = 10f;
-    public float maxY = 800f;
+    public float zoomSpeed = 40f;
+    public float minY = 5f;
+    public float maxY = 300f;
 
     [Header("Rotation")]
     public float rotationSpeed = 80f;
@@ -30,9 +30,17 @@ public class CameraController : MonoBehaviour
 
     void Start()
     {
+        // Auto-find terrain if not assigned in Inspector
+        if (terrain == null)
+        {
+            terrain = FindAnyObjectByType<Terrain>();
+            if (terrain == null)
+                Debug.LogWarning("[CameraController] No Terrain found in scene!");
+        }
+
         // Read terrain size dynamically
-        float terrainWidth = 1000f;
-        float terrainLength = 1000f;
+        float terrainWidth = 250f;
+        float terrainLength = 250f;
 
         if (terrain != null && terrain.terrainData != null)
         {
@@ -49,8 +57,8 @@ public class CameraController : MonoBehaviour
         }
         else
         {
-            panLimitX = new Vector2(-200, 1200);
-            panLimitZ = new Vector2(-200, 1200);
+            panLimitX = new Vector2(-50, 300);
+            panLimitZ = new Vector2(-50, 300);
         }
 
         // Center camera over terrain, zoomed out to see the whole thing

@@ -16,7 +16,8 @@ public class GridManager : MonoBehaviour
     public float cellSize; // Computed in Awake: terrainSize / gridCount
 
     [Header("Grid Visual")]
-    public Color gridColor = new Color(0f, 1f, 0f, 0.15f);
+    public Color gridColor = new Color(0.2f, 1f, 0.3f, 0.5f);
+    public float lineWidth = 0.06f;
     public bool showGrid = true;
 
     [Header("References")]
@@ -28,14 +29,22 @@ public class GridManager : MonoBehaviour
     // 2D array tracking permanently blocked cells (environment objects)
     private bool[,] permanentCells;
 
-    // Cached material for grid line drawing
-    private Material lineMat;
+    // Grid line rendering (URP-compatible)
+    private GameObject gridLinesParent;
 
     // Cached terrain origin — terrain is static, so safe to cache
     private Vector3 terrainOrigin;
 
     void Awake()
     {
+        // Auto-find terrain if not assigned in Inspector
+        if (terrain == null)
+        {
+            terrain = FindAnyObjectByType<Terrain>();
+            if (terrain == null)
+                Debug.LogWarning("[GridManager] No Terrain found in scene!");
+        }
+
         // Auto-compute cell size from terrain dimensions
         if (terrain != null && terrain.terrainData != null)
         {
@@ -45,42 +54,72 @@ public class GridManager : MonoBehaviour
         }
         else
         {
-            cellSize = 10f; // Fallback
-            Debug.LogWarning("[GridManager] No terrain assigned! Using fallback cellSize=10.");
+            cellSize = 2.5f; // Fallback for 250/100
+            Debug.LogWarning("[GridManager] No terrain assigned! Using fallback cellSize=2.5.");
         }
 
         occupiedCells = new bool[gridWidth, gridHeight];
         permanentCells = new bool[gridWidth, gridHeight];
-        CreateLineMaterial();
 
         terrainOrigin = (terrain != null) ? terrain.transform.position : Vector3.zero;
+
+        if (showGrid)
+            CreateGridLines();
     }
 
-    private void CreateLineMaterial()
+    /// <summary>
+    /// Creates grid lines using LineRenderers (URP-compatible).
+    /// </summary>
+    private void CreateGridLines()
     {
-        // Try built-in shader first, then fall back to shaders available in URP
-        Shader shader = Shader.Find("Hidden/Internal-Colored");
-        if (shader == null)
+        // Clean up any previous grid
+        if (gridLinesParent != null)
+            Destroy(gridLinesParent);
+
+        gridLinesParent = new GameObject("GridLines");
+        gridLinesParent.transform.SetParent(transform);
+
+        Material lineMat = new Material(Shader.Find("Sprites/Default"));
+        lineMat.hideFlags = HideFlags.HideAndDontSave;
+
+        float yOffset = 0.05f;
+
+        // Vertical lines (along Z axis)
+        for (int x = 0; x <= gridWidth; x++)
         {
-            Debug.LogWarning("[GridManager] 'Hidden/Internal-Colored' shader not found (URP?). Trying fallback.");
-            shader = Shader.Find("Sprites/Default");
-        }
-        if (shader == null)
-        {
-            shader = Shader.Find("UI/Default");
-        }
-        if (shader == null)
-        {
-            Debug.LogError("[GridManager] No suitable shader found for grid lines! Grid will not render.");
-            return;
+            Vector3 start = terrainOrigin + new Vector3(x * cellSize, yOffset, 0);
+            Vector3 end = terrainOrigin + new Vector3(x * cellSize, yOffset, gridHeight * cellSize);
+            CreateLine($"GridLine_V_{x}", start, end, lineMat, lineWidth);
         }
 
-        lineMat = new Material(shader);
-        lineMat.hideFlags = HideFlags.HideAndDontSave;
-        lineMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        lineMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        lineMat.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-        lineMat.SetInt("_ZWrite", 0);
+        // Horizontal lines (along X axis)
+        for (int z = 0; z <= gridHeight; z++)
+        {
+            Vector3 start = terrainOrigin + new Vector3(0, yOffset, z * cellSize);
+            Vector3 end = terrainOrigin + new Vector3(gridWidth * cellSize, yOffset, z * cellSize);
+            CreateLine($"GridLine_H_{z}", start, end, lineMat, lineWidth);
+        }
+
+        Debug.Log($"[GridManager] Created {gridWidth + gridHeight + 2} grid lines.");
+    }
+
+    private void CreateLine(string name, Vector3 start, Vector3 end, Material mat, float width)
+    {
+        GameObject lineObj = new GameObject(name);
+        lineObj.transform.SetParent(gridLinesParent.transform);
+
+        LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+        lr.material = mat;
+        lr.startColor = gridColor;
+        lr.endColor = gridColor;
+        lr.startWidth = width;
+        lr.endWidth = width;
+        lr.positionCount = 2;
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, end);
+        lr.useWorldSpace = true;
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lr.receiveShadows = false;
     }
 
     /// <summary>
@@ -265,37 +304,12 @@ public class GridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Draws the grid lines using GL (visible in Game view).
+    /// Toggles grid line visibility at runtime.
     /// </summary>
-    void OnRenderObject()
+    public void SetGridVisible(bool visible)
     {
-        if (!showGrid || lineMat == null) return;
-        lineMat.SetPass(0);
-
-        Vector3 origin = terrainOrigin;
-        float yOffset = 0.05f;
-
-        GL.PushMatrix();
-        GL.Begin(GL.LINES);
-        GL.Color(gridColor);
-
-        for (int x = 0; x <= gridWidth; x++)
-        {
-            Vector3 start = origin + new Vector3(x * cellSize, yOffset, 0);
-            Vector3 end = origin + new Vector3(x * cellSize, yOffset, gridHeight * cellSize);
-            GL.Vertex(start);
-            GL.Vertex(end);
-        }
-
-        for (int z = 0; z <= gridHeight; z++)
-        {
-            Vector3 start = origin + new Vector3(0, yOffset, z * cellSize);
-            Vector3 end = origin + new Vector3(gridWidth * cellSize, yOffset, z * cellSize);
-            GL.Vertex(start);
-            GL.Vertex(end);
-        }
-
-        GL.End();
-        GL.PopMatrix();
+        showGrid = visible;
+        if (gridLinesParent != null)
+            gridLinesParent.SetActive(visible);
     }
 }
