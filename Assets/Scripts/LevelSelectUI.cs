@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using TMPro;
 
 /// <summary>
 /// Level selection screen.
@@ -21,12 +19,17 @@ public class LevelSelectUI : MonoBehaviour
 
     private int selectedIndex = 0;
     private int enabledLevelCount = 1; // only Level 1 (index 0) is playable
+    private Image[] buttonImages;
 
     void Start()
     {
+        // Cache Image components
+        buttonImages = new Image[levelButtons.Length];
+
         // Wire up buttons
         for (int i = 0; i < levelButtons.Length; i++)
         {
+            buttonImages[i] = levelButtons[i].GetComponent<Image>();
             int level = i; // closure capture
             if (i < enabledLevelCount)
             {
@@ -46,29 +49,27 @@ public class LevelSelectUI : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null) return;
-
         // Navigation
         bool moved = false;
 
-        if (Keyboard.current.rightArrowKey.wasPressedThisFrame ||
-            Keyboard.current.tabKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetRightArrowDown() ||
+            InputManager.Instance.GetTabDown())
         {
             selectedIndex = (selectedIndex + 1) % levelButtons.Length;
             moved = true;
         }
-        else if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
+        else if (InputManager.Instance.GetLeftArrowDown())
         {
             selectedIndex = (selectedIndex - 1 + levelButtons.Length) % levelButtons.Length;
             moved = true;
         }
-        else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
+        else if (InputManager.Instance.GetDownArrowDown())
         {
             // Jump forward by ~columns (assume 5 in a row, wraps)
             selectedIndex = Mathf.Min(selectedIndex + 1, levelButtons.Length - 1);
             moved = true;
         }
-        else if (Keyboard.current.upArrowKey.wasPressedThisFrame)
+        else if (InputManager.Instance.GetUpArrowDown())
         {
             selectedIndex = Mathf.Max(selectedIndex - 1, 0);
             moved = true;
@@ -77,15 +78,14 @@ public class LevelSelectUI : MonoBehaviour
         if (moved) UpdateHighlight();
 
         // Select
-        if (Keyboard.current.enterKey.wasPressedThisFrame ||
-            Keyboard.current.numpadEnterKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetEnterDown())
         {
             if (selectedIndex < enabledLevelCount)
                 OnLevelSelected(selectedIndex);
         }
 
         // Back
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetEscapeDown())
         {
             OnBack();
         }
@@ -95,15 +95,14 @@ public class LevelSelectUI : MonoBehaviour
     {
         for (int i = 0; i < levelButtons.Length; i++)
         {
-            Image img = levelButtons[i].GetComponent<Image>();
-            if (img == null) continue;
+            if (buttonImages[i] == null) continue;
 
             if (i == selectedIndex)
-                img.color = highlightColor;
+                buttonImages[i].color = highlightColor;
             else if (i < enabledLevelCount)
-                img.color = enabledColor;
+                buttonImages[i].color = enabledColor;
             else
-                img.color = disabledColor;
+                buttonImages[i].color = disabledColor;
         }
     }
 

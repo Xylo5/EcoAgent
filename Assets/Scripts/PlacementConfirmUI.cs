@@ -19,6 +19,12 @@ public class PlacementConfirmUI : MonoBehaviour
 
     private Transform followTarget;
 
+    void Start()
+    {
+        // Ensure panel starts hidden — it should only appear during placement
+        Hide();
+    }
+
     // Kept for backward compatibility with BuildingPlacer
     public void Show(Transform target)
     {

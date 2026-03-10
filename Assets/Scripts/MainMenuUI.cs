@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using TMPro;
 
 /// <summary>
 /// Main menu controller.
@@ -24,15 +22,12 @@ public class MainMenuUI : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null) return;
-
-        if (Keyboard.current.enterKey.wasPressedThisFrame ||
-            Keyboard.current.numpadEnterKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetEnterDown())
         {
             OnStartGame();
         }
 
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetEscapeDown())
         {
             OnQuit();
         }

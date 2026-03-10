@@ -16,55 +16,58 @@ public class GridCellHighlighter : MonoBehaviour
 
     // Pool of quad GameObjects
     private GameObject[] quadPool;
+    private Renderer[] quadRenderers; // Cached renderers — no per-frame GetComponent
     private int maxQuads = 25; // max 5x5 building
-    private Material quadMaterial;
     private int activeQuads = 0;
+
+    // MaterialPropertyBlock avoids creating per-quad material instances
+    private MaterialPropertyBlock propBlock;
+    private static readonly int ColorProp = Shader.PropertyToID("_Color");
 
     void Awake()
     {
-        CreateQuadMaterial();
+        propBlock = new MaterialPropertyBlock();
         CreateQuadPool();
-    }
-
-    private void CreateQuadMaterial()
-    {
-        quadMaterial = new Material(Shader.Find("Sprites/Default"));
-        quadMaterial.hideFlags = HideFlags.HideAndDontSave;
     }
 
     private void CreateQuadPool()
     {
+        Material sharedMat = new Material(Shader.Find("Sprites/Default"));
+        sharedMat.hideFlags = HideFlags.HideAndDontSave;
+
         quadPool = new GameObject[maxQuads];
+        quadRenderers = new Renderer[maxQuads];
+
         for (int i = 0; i < maxQuads; i++)
         {
             GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             quad.name = "CellHighlight_" + i;
             quad.transform.SetParent(transform);
-            quad.transform.rotation = Quaternion.Euler(90f, 0f, 0f); // Lay flat
+            quad.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 
             // Remove collider
             Collider col = quad.GetComponent<Collider>();
             if (col != null) Destroy(col);
 
-            // Set material
+            // Set shared material & cache renderer
             Renderer rend = quad.GetComponent<Renderer>();
-            rend.material = quadMaterial;
+            rend.sharedMaterial = sharedMat;
             rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             rend.receiveShadows = false;
 
             quad.SetActive(false);
             quadPool[i] = quad;
+            quadRenderers[i] = rend;
         }
     }
 
     /// <summary>
     /// Shows cell highlights for a building footprint.
-    /// Call this every frame during placement.
     /// </summary>
     public void ShowHighlight(Vector2Int startCell, int size, PlacedBuilding ignoredBuilding = null)
     {
         activeQuads = 0;
-        float margin = 0.05f; // Slight inset so highlight doesn't cover grid lines
+        float margin = 0.05f;
         float quadSize = gridManager.cellSize - margin * 2f;
 
         for (int x = 0; x < size; x++)
@@ -79,18 +82,16 @@ public class GridCellHighlighter : MonoBehaviour
 
                 GameObject quad = quadPool[idx];
                 quad.SetActive(true);
-                quad.transform.position = worldCenter + Vector3.up * 0.08f; // Slight Y offset
+                quad.transform.position = worldCenter + Vector3.up * 0.08f;
                 quad.transform.localScale = new Vector3(quadSize, quadSize, 1f);
 
-                // Color based on availability
-                bool available;
-                if (ignoredBuilding != null)
-                    available = gridManager.IsAreaAvailable(cell, 1, ignoredBuilding);
-                else
-                    available = gridManager.IsCellAvailable(cell);
+                // Color via PropertyBlock — no material instance created
+                bool available = (ignoredBuilding != null)
+                    ? gridManager.IsAreaAvailable(cell, 1, ignoredBuilding)
+                    : gridManager.IsCellAvailable(cell);
 
-                Renderer rend = quad.GetComponent<Renderer>();
-                rend.material.color = available ? validCellColor : invalidCellColor;
+                propBlock.SetColor(ColorProp, available ? validCellColor : invalidCellColor);
+                quadRenderers[idx].SetPropertyBlock(propBlock);
 
                 activeQuads++;
             }
@@ -98,9 +99,7 @@ public class GridCellHighlighter : MonoBehaviour
 
         // Disable unused quads
         for (int i = activeQuads; i < maxQuads; i++)
-        {
             quadPool[i].SetActive(false);
-        }
     }
 
     /// <summary>

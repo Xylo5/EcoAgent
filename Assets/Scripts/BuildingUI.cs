@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;
 using TMPro;
 
 /// <summary>
@@ -28,7 +27,9 @@ public class BuildingUI : MonoBehaviour
 
     private int selectedIndex = 0;
     private GameObject[] buttonObjects;
+    private Image[] buttonImages;
     private bool shopActive = true;
+    private bool initialized = false;
 
     void Start()
     {
@@ -38,10 +39,15 @@ public class BuildingUI : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null) return;
+        // Skip first frame — prevents stale left-click from scene load triggering selection
+        if (!initialized)
+        {
+            initialized = true;
+            return;
+        }
 
         // Tab reopens the shop if closed, then cycles buildings
-        if (Keyboard.current.tabKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetTabDown())
         {
             // If shop is hidden, reopen it first
             if (!shopActive)
@@ -51,7 +57,7 @@ public class BuildingUI : MonoBehaviour
             }
 
             // Cycle through buildings
-            if (Keyboard.current.leftShiftKey.isPressed)
+            if (InputManager.Instance.GetShiftHeld())
                 selectedIndex = (selectedIndex - 1 + buildings.Length) % buildings.Length;
             else
                 selectedIndex = (selectedIndex + 1) % buildings.Length;
@@ -60,9 +66,7 @@ public class BuildingUI : MonoBehaviour
         }
 
         // Enter = select the highlighted building (only when shop is open)
-        if (shopActive &&
-            (Keyboard.current.enterKey.wasPressedThisFrame ||
-             Keyboard.current.numpadEnterKey.wasPressedThisFrame))
+        if (shopActive && InputManager.Instance.GetEnterDown())
         {
             if (buildings.Length > 0)
             {
@@ -75,6 +79,7 @@ public class BuildingUI : MonoBehaviour
     void CreateBuildingButtons()
     {
         buttonObjects = new GameObject[buildings.Length];
+        buttonImages = new Image[buildings.Length];
 
         for (int i = 0; i < buildings.Length; i++)
         {
@@ -87,6 +92,7 @@ public class BuildingUI : MonoBehaviour
                 btnText.text = building.buildingName + "\n(" + building.sizeInCells + "x" + building.sizeInCells + ")";
 
             buttonObjects[i] = btnObj;
+            buttonImages[i] = btnObj.GetComponent<Image>();
         }
     }
 
@@ -94,9 +100,8 @@ public class BuildingUI : MonoBehaviour
     {
         for (int i = 0; i < buttonObjects.Length; i++)
         {
-            Image img = buttonObjects[i].GetComponent<Image>();
-            if (img != null)
-                img.color = (i == selectedIndex) ? selectedColor : normalColor;
+            if (buttonImages[i] != null)
+                buttonImages[i].color = (i == selectedIndex) ? selectedColor : normalColor;
 
             buttonObjects[i].transform.localScale = (i == selectedIndex)
                 ? Vector3.one * 1.15f

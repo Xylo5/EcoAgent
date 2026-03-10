@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using TMPro;
 
 /// <summary>
 /// Small in-game HUD overlay for a gameplay level.
@@ -20,9 +18,7 @@ public class LevelHUD : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null) return;
-
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetEscapeDown())
         {
             OnBack();
         }

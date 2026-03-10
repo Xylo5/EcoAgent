@@ -31,6 +31,9 @@ public class GridManager : MonoBehaviour
     // Cached material for grid line drawing
     private Material lineMat;
 
+    // Cached terrain origin — terrain is static, so safe to cache
+    private Vector3 terrainOrigin;
+
     void Awake()
     {
         // Auto-compute cell size from terrain dimensions
@@ -49,12 +52,29 @@ public class GridManager : MonoBehaviour
         occupiedCells = new bool[gridWidth, gridHeight];
         permanentCells = new bool[gridWidth, gridHeight];
         CreateLineMaterial();
+
+        terrainOrigin = (terrain != null) ? terrain.transform.position : Vector3.zero;
     }
 
     private void CreateLineMaterial()
     {
+        // Try built-in shader first, then fall back to shaders available in URP
         Shader shader = Shader.Find("Hidden/Internal-Colored");
-        if (shader == null) return;
+        if (shader == null)
+        {
+            Debug.LogWarning("[GridManager] 'Hidden/Internal-Colored' shader not found (URP?). Trying fallback.");
+            shader = Shader.Find("Sprites/Default");
+        }
+        if (shader == null)
+        {
+            shader = Shader.Find("UI/Default");
+        }
+        if (shader == null)
+        {
+            Debug.LogError("[GridManager] No suitable shader found for grid lines! Grid will not render.");
+            return;
+        }
+
         lineMat = new Material(shader);
         lineMat.hideFlags = HideFlags.HideAndDontSave;
         lineMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -68,10 +88,9 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector3 GetCellWorldCenter(Vector2Int cell)
     {
-        Vector3 terrainPos = terrain.transform.position;
-        float x = terrainPos.x + cell.x * cellSize + cellSize / 2f;
-        float z = terrainPos.z + cell.y * cellSize + cellSize / 2f;
-        float y = terrain.SampleHeight(new Vector3(x, 0, z)) + terrainPos.y;
+        float x = terrainOrigin.x + cell.x * cellSize + cellSize / 2f;
+        float z = terrainOrigin.z + cell.y * cellSize + cellSize / 2f;
+        float y = terrain.SampleHeight(new Vector3(x, 0, z)) + terrainOrigin.y;
         return new Vector3(x, y, z);
     }
 
@@ -81,24 +100,18 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector3 SnapToGrid(Vector3 worldPosition, int buildingSize = 1)
     {
-        Vector3 terrainPos = terrain.transform.position;
+        float localX = worldPosition.x - terrainOrigin.x;
+        float localZ = worldPosition.z - terrainOrigin.z;
 
-        // Calculate grid-local position
-        float localX = worldPosition.x - terrainPos.x;
-        float localZ = worldPosition.z - terrainPos.z;
-
-        // Snap to bottom-left cell
         int cellX = Mathf.FloorToInt(localX / cellSize);
         int cellZ = Mathf.FloorToInt(localZ / cellSize);
 
-        // Clamp so the building fits within grid bounds
         cellX = Mathf.Clamp(cellX, 0, gridWidth - buildingSize);
         cellZ = Mathf.Clamp(cellZ, 0, gridHeight - buildingSize);
 
-        // Return world position at the center of the building's footprint
-        float snappedX = terrainPos.x + cellX * cellSize + (buildingSize * cellSize) / 2f;
-        float snappedZ = terrainPos.z + cellZ * cellSize + (buildingSize * cellSize) / 2f;
-        float snappedY = terrain.SampleHeight(new Vector3(snappedX, 0, snappedZ)) + terrainPos.y;
+        float snappedX = terrainOrigin.x + cellX * cellSize + (buildingSize * cellSize) / 2f;
+        float snappedZ = terrainOrigin.z + cellZ * cellSize + (buildingSize * cellSize) / 2f;
+        float snappedY = terrain.SampleHeight(new Vector3(snappedX, 0, snappedZ)) + terrainOrigin.y;
 
         return new Vector3(snappedX, snappedY, snappedZ);
     }
@@ -108,9 +121,8 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector2Int WorldToGrid(Vector3 worldPosition)
     {
-        Vector3 terrainPos = terrain.transform.position;
-        int cellX = Mathf.FloorToInt((worldPosition.x - terrainPos.x) / cellSize);
-        int cellZ = Mathf.FloorToInt((worldPosition.z - terrainPos.z) / cellSize);
+        int cellX = Mathf.FloorToInt((worldPosition.x - terrainOrigin.x) / cellSize);
+        int cellZ = Mathf.FloorToInt((worldPosition.z - terrainOrigin.z) / cellSize);
         cellX = Mathf.Clamp(cellX, 0, gridWidth - 1);
         cellZ = Mathf.Clamp(cellZ, 0, gridHeight - 1);
         return new Vector2Int(cellX, cellZ);
@@ -121,11 +133,10 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector2Int GetBuildingGridCell(Vector3 buildingCenter, int buildingSize)
     {
-        Vector3 terrainPos = terrain.transform.position;
         float bottomLeftX = buildingCenter.x - (buildingSize * cellSize) / 2f;
         float bottomLeftZ = buildingCenter.z - (buildingSize * cellSize) / 2f;
-        int cellX = Mathf.RoundToInt((bottomLeftX - terrainPos.x) / cellSize);
-        int cellZ = Mathf.RoundToInt((bottomLeftZ - terrainPos.z) / cellSize);
+        int cellX = Mathf.RoundToInt((bottomLeftX - terrainOrigin.x) / cellSize);
+        int cellZ = Mathf.RoundToInt((bottomLeftZ - terrainOrigin.z) / cellSize);
         cellX = Mathf.Clamp(cellX, 0, gridWidth - buildingSize);
         cellZ = Mathf.Clamp(cellZ, 0, gridHeight - buildingSize);
         return new Vector2Int(cellX, cellZ);
@@ -261,7 +272,7 @@ public class GridManager : MonoBehaviour
         if (!showGrid || lineMat == null) return;
         lineMat.SetPass(0);
 
-        Vector3 origin = terrain.transform.position;
+        Vector3 origin = terrainOrigin;
         float yOffset = 0.05f;
 
         GL.PushMatrix();

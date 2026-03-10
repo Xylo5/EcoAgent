@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// Handles building placement with full keyboard controls (CoC-style).
@@ -39,13 +38,14 @@ public class BuildingPlacer : MonoBehaviour
     // Arrow key repeat timer
     private float nextMoveTime = 0f;
 
+    // Mouse tracking
+    private Vector2 lastMousePos;
+
     // Cooldown: ignore Enter for N frames after entering placement
     private int confirmCooldown = 0;
 
     void Update()
     {
-        if (Keyboard.current == null) return;
-
         // Tick down the cooldown
         if (confirmCooldown > 0)
             confirmCooldown--;
@@ -53,7 +53,7 @@ public class BuildingPlacer : MonoBehaviour
         if (state == PlacerState.Idle)
             return;
 
-        HandleArrowMovement();
+        HandleMovement();
         HandleConfirmCancel();
     }
 
@@ -75,7 +75,20 @@ public class BuildingPlacer : MonoBehaviour
         // Start ghost at grid center
         int centerX = (gridManager.gridWidth - building.sizeInCells) / 2;
         int centerZ = (gridManager.gridHeight - building.sizeInCells) / 2;
-        ghostGridCell = new Vector2Int(centerX, centerZ);
+
+        // Try placing at mouse position first, if valid based on raycast, else fallback
+        lastMousePos = InputManager.Instance.GetMousePosition();
+        Ray ray = mainCamera.ScreenPointToRay(lastMousePos);
+        Plane plane = new Plane(Vector3.up, new Vector3(0, gridManager.terrain.transform.position.y, 0));
+        if (plane.Raycast(ray, out float enter))
+        {
+            Vector3 hitPoint = ray.GetPoint(enter);
+            ghostGridCell = gridManager.GetBuildingGridCell(hitPoint, building.sizeInCells);
+        }
+        else
+        {
+            ghostGridCell = new Vector2Int(centerX, centerZ);
+        }
 
         Vector3 worldPos = GridCellToWorldPos(ghostGridCell, building.sizeInCells);
         worldPos.y += ghostLiftHeight;
@@ -133,60 +146,89 @@ public class BuildingPlacer : MonoBehaviour
     }
 
     // ═══════════════════════════════════════════
-    //  ARROW KEY MOVEMENT (tile-by-tile)
+    //  MOVEMENT (Mouse + Arrow Keys)
     // ═══════════════════════════════════════════
 
-    private void HandleArrowMovement()
+    private void HandleMovement()
     {
         if (ghostObject == null || currentBuildingData == null) return;
 
-        Keyboard kb = Keyboard.current;
         int size = currentBuildingData.sizeInCells;
+        bool positionChanged = false;
 
+        // --- Mouse Movement ---
+        Vector2 currentMousePos = InputManager.Instance.GetMousePosition();
+        if ((currentMousePos - lastMousePos).sqrMagnitude > 2f) // If mouse moved
+        {
+            lastMousePos = currentMousePos;
+            Ray ray = mainCamera.ScreenPointToRay(currentMousePos);
+            // Math plane at terrain height
+            Plane plane = new Plane(Vector3.up, new Vector3(0, gridManager.terrain.transform.position.y, 0));
+            if (plane.Raycast(ray, out float enter))
+            {
+                Vector3 hitPoint = ray.GetPoint(enter);
+                Vector2Int mouseCell = gridManager.GetBuildingGridCell(hitPoint, size);
+
+                if (mouseCell != ghostGridCell)
+                {
+                    ghostGridCell = mouseCell;
+                    positionChanged = true;
+                }
+            }
+        }
+
+        // --- Keyboard Movement ---
         Vector2Int move = Vector2Int.zero;
 
-        if (kb.upArrowKey.isPressed)    move.y += 1;
-        if (kb.downArrowKey.isPressed)  move.y -= 1;
-        if (kb.rightArrowKey.isPressed) move.x += 1;
-        if (kb.leftArrowKey.isPressed)  move.x -= 1;
+        if (InputManager.Instance.GetUpArrowHeld())    move.y += 1;
+        if (InputManager.Instance.GetDownArrowHeld())  move.y -= 1;
+        if (InputManager.Instance.GetRightArrowHeld()) move.x += 1;
+        if (InputManager.Instance.GetLeftArrowHeld())  move.x -= 1;
 
-        if (move == Vector2Int.zero)
-            return;
-
-        bool shouldMove = false;
-
-        // First press — move immediately
-        if (kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame ||
-            kb.rightArrowKey.wasPressedThisFrame || kb.leftArrowKey.wasPressedThisFrame)
+        if (move != Vector2Int.zero)
         {
-            shouldMove = true;
-            nextMoveTime = Time.time + moveRepeatDelay;
-        }
-        // Held down — auto-repeat
-        else if (Time.time >= nextMoveTime)
-        {
-            shouldMove = true;
-            nextMoveTime = Time.time + moveRepeatRate;
-        }
+            bool shouldMove = false;
 
-        if (shouldMove)
-        {
-            Vector2Int newCell = ghostGridCell + move;
-
-            // Clamp within grid
-            newCell.x = Mathf.Clamp(newCell.x, 0, gridManager.gridWidth - size);
-            newCell.y = Mathf.Clamp(newCell.y, 0, gridManager.gridHeight - size);
-
-            if (newCell != ghostGridCell)
+            // First press — move immediately
+            if (InputManager.Instance.GetUpArrowDown() || InputManager.Instance.GetDownArrowDown() ||
+                InputManager.Instance.GetRightArrowDown() || InputManager.Instance.GetLeftArrowDown())
             {
-                ghostGridCell = newCell;
-
-                Vector3 worldPos = GridCellToWorldPos(ghostGridCell, size);
-                worldPos.y += ghostLiftHeight;
-                ghostObject.transform.position = worldPos;
-
-                UpdateValidity();
+                shouldMove = true;
+                nextMoveTime = Time.time + moveRepeatDelay;
             }
+            // Held down — auto-repeat
+            else if (Time.time >= nextMoveTime)
+            {
+                shouldMove = true;
+                nextMoveTime = Time.time + moveRepeatRate;
+            }
+
+            if (shouldMove)
+            {
+                Vector2Int newCell = ghostGridCell + move;
+
+                // Clamp within grid
+                newCell.x = Mathf.Clamp(newCell.x, 0, gridManager.gridWidth - size);
+                newCell.y = Mathf.Clamp(newCell.y, 0, gridManager.gridHeight - size);
+
+                if (newCell != ghostGridCell)
+                {
+                    ghostGridCell = newCell;
+                    positionChanged = true;
+                    // Keep mouse sync from overriding key movement if mouse isn't moving
+                    lastMousePos = currentMousePos; 
+                }
+            }
+        }
+
+        // --- Apply Position ---
+        if (positionChanged)
+        {
+            Vector3 worldPos = GridCellToWorldPos(ghostGridCell, size);
+            worldPos.y += ghostLiftHeight;
+            ghostObject.transform.position = worldPos;
+
+            UpdateValidity();
         }
     }
 
@@ -196,11 +238,8 @@ public class BuildingPlacer : MonoBehaviour
 
     private void HandleConfirmCancel()
     {
-        Keyboard kb = Keyboard.current;
-
         // Enter = confirm (only after cooldown expires)
-        if (confirmCooldown <= 0 &&
-            (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
+        if (confirmCooldown <= 0 && InputManager.Instance.GetEnterDown())
         {
             if (canPlace)
             {
@@ -213,7 +252,7 @@ public class BuildingPlacer : MonoBehaviour
         }
 
         // Escape = cancel
-        if (kb.escapeKey.wasPressedThisFrame)
+        if (InputManager.Instance.GetEscapeDown())
         {
             Debug.Log("[BuildingPlacer] Placement cancelled.");
             CancelPlacement();
@@ -271,18 +310,7 @@ public class BuildingPlacer : MonoBehaviour
         gridManager.OccupyCells(ghostGridCell, size);
         Debug.Log($"[BuildingPlacer] Placed {currentBuildingData.buildingName} at ({ghostGridCell.x}, {ghostGridCell.y})");
 
-        // Clean up ghost
-        Destroy(ghostObject);
-        ghostObject = null;
-        currentBuildingData = null;
-        state = PlacerState.Idle;
-
-        if (cellHighlighter != null) cellHighlighter.HideHighlight();
-        if (confirmUI != null) confirmUI.Hide();
-
-        // Return to shop
-        if (buildingUI != null)
-            buildingUI.ShowShop();
+        CleanupPlacement();
     }
 
     private void ConfirmMovePlacement()
@@ -295,17 +323,20 @@ public class BuildingPlacer : MonoBehaviour
 
         Debug.Log($"[BuildingPlacer] Moved {currentBuildingData.buildingName} to ({ghostGridCell.x}, {ghostGridCell.y})");
 
+        movingBuilding = null;
+        CleanupPlacement();
+    }
+
+    private void CleanupPlacement()
+    {
         Destroy(ghostObject);
         ghostObject = null;
-        movingBuilding = null;
         currentBuildingData = null;
         state = PlacerState.Idle;
 
         if (cellHighlighter != null) cellHighlighter.HideHighlight();
         if (confirmUI != null) confirmUI.Hide();
-
-        if (buildingUI != null)
-            buildingUI.ShowShop();
+        if (buildingUI != null) buildingUI.ShowShop();
     }
 
     // ═══════════════════════════════════════════

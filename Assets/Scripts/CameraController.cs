@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// RTS-style camera controller.
@@ -66,10 +65,7 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current == null) return;
-
         Vector3 pos = transform.position;
-        Keyboard kb = Keyboard.current;
 
         // Flatten the forward/right vectors so WASD only moves horizontally
         Vector3 flatForward = transform.forward;
@@ -80,27 +76,18 @@ public class CameraController : MonoBehaviour
         flatRight.y = 0f;
         flatRight.Normalize();
 
-        // --- Panning (WASD) — horizontal only ---
-        if (kb.wKey.isPressed)
-            pos += flatForward * panSpeed * Time.deltaTime;
-        if (kb.sKey.isPressed)
-            pos -= flatForward * panSpeed * Time.deltaTime;
-        if (kb.dKey.isPressed)
-            pos += flatRight * panSpeed * Time.deltaTime;
-        if (kb.aKey.isPressed)
-            pos -= flatRight * panSpeed * Time.deltaTime;
+        // --- Panning (WASD + Middle Mouse drag) ---
+        Vector2 pan = InputManager.Instance.GetPanInput();
+        pos += flatRight * pan.x * panSpeed * Time.deltaTime;
+        pos += flatForward * pan.y * panSpeed * Time.deltaTime;
 
-        // --- Zoom (Z / X keys) ---
-        if (kb.zKey.isPressed)
-            pos.y -= zoomSpeed * Time.deltaTime;
-        if (kb.xKey.isPressed)
-            pos.y += zoomSpeed * Time.deltaTime;
+        // --- Zoom (Z / X keys + Scroll Wheel) ---
+        float zoom = InputManager.Instance.GetZoomInput();
+        pos.y += zoom * zoomSpeed * Time.deltaTime;
 
-        // --- Rotation (Q / E keys) ---
-        if (kb.qKey.isPressed)
-            transform.Rotate(Vector3.up, -rotationSpeed * Time.deltaTime, Space.World);
-        if (kb.eKey.isPressed)
-            transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime, Space.World);
+        // --- Rotation (Q / E keys + Right Mouse drag) ---
+        float rotate = InputManager.Instance.GetRotateInput();
+        transform.Rotate(Vector3.up, rotate * rotationSpeed * Time.deltaTime, Space.World);
 
         // --- Clamp ---
         pos.x = Mathf.Clamp(pos.x, panLimitX.x, panLimitX.y);
