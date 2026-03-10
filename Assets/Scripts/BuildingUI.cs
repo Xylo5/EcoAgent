@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 
@@ -93,6 +94,23 @@ public class BuildingUI : MonoBehaviour
 
             buttonObjects[i] = btnObj;
             buttonImages[i] = btnObj.GetComponent<Image>();
+
+            // Mouse hover → highlight this option
+            int index = i; // capture for closure
+            EventTrigger trigger = btnObj.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = btnObj.AddComponent<EventTrigger>();
+
+            EventTrigger.Entry hoverEntry = new EventTrigger.Entry();
+            hoverEntry.eventID = EventTriggerType.PointerEnter;
+            hoverEntry.callback.AddListener((_) => OnButtonHover(index));
+            trigger.triggers.Add(hoverEntry);
+
+            // Mouse click → select this building directly
+            EventTrigger.Entry clickEntry = new EventTrigger.Entry();
+            clickEntry.eventID = EventTriggerType.PointerClick;
+            clickEntry.callback.AddListener((_) => OnButtonClick(index));
+            trigger.triggers.Add(clickEntry);
         }
     }
 
@@ -122,5 +140,25 @@ public class BuildingUI : MonoBehaviour
         if (shopPanel != null)
             shopPanel.SetActive(true);
         UpdateButtonHighlight();
+    }
+
+    // ═══════════════════════════════════════════
+    //  MOUSE CALLBACKS
+    // ═══════════════════════════════════════════
+
+    private void OnButtonHover(int index)
+    {
+        if (!shopActive) return;
+        selectedIndex = index;
+        UpdateButtonHighlight();
+    }
+
+    private void OnButtonClick(int index)
+    {
+        if (!shopActive || buildings.Length == 0) return;
+        selectedIndex = index;
+        UpdateButtonHighlight();
+        buildingPlacer.StartPlacing(buildings[selectedIndex]);
+        HideShop();
     }
 }

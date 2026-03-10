@@ -11,9 +11,9 @@ public class InputManager : MonoBehaviour
 
     [Header("Mouse Settings")]
     [Tooltip("Sensitivity multiplier for panning with holding middle mouse button.")]
-    public float mousePanSensitivity = 0.1f;
+    public float mousePanSensitivity = 1.0f;
     [Tooltip("Sensitivity multiplier for zooming with scroll wheel.")]
-    public float mouseZoomSensitivity = 0.05f;
+    public float mouseZoomSensitivity = 10.0f;
     [Tooltip("Sensitivity multiplier for rotating with right mouse button.")]
     public float mouseRotateSensitivity = 0.5f;
     [Tooltip("If true, dragging the mouse pans the camera in the opposite direction (like grabbing).")]
