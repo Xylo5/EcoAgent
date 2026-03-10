@@ -8,20 +8,61 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class CameraController : MonoBehaviour
 {
+    [Header("References")]
+    public Terrain terrain;
+
     [Header("Movement")]
-    public float panSpeed = 20f;
+    public float panSpeed = 50f;
 
     [Header("Zoom")]
-    public float zoomSpeed = 15f;
+    public float zoomSpeed = 60f;
     public float minY = 10f;
-    public float maxY = 80f;
+    public float maxY = 800f;
 
     [Header("Rotation")]
     public float rotationSpeed = 80f;
 
-    [Header("Bounds")]
-    public Vector2 panLimitX = new Vector2(-10, 110);
-    public Vector2 panLimitZ = new Vector2(-10, 110);
+    [Header("Start Position")]
+    [Tooltip("Starting look-down angle in degrees")]
+    public float startPitch = 55f;
+
+    private Vector2 panLimitX;
+    private Vector2 panLimitZ;
+
+    void Start()
+    {
+        // Read terrain size dynamically
+        float terrainWidth = 1000f;
+        float terrainLength = 1000f;
+
+        if (terrain != null && terrain.terrainData != null)
+        {
+            Vector3 terrainSize = terrain.terrainData.size;
+            Vector3 terrainPos = terrain.transform.position;
+            terrainWidth = terrainSize.x;
+            terrainLength = terrainSize.z;
+
+            // Pan limits: terrain bounds + 20% margin
+            float marginX = terrainWidth * 0.2f;
+            float marginZ = terrainLength * 0.2f;
+            panLimitX = new Vector2(terrainPos.x - marginX, terrainPos.x + terrainWidth + marginX);
+            panLimitZ = new Vector2(terrainPos.z - marginZ, terrainPos.z + terrainLength + marginZ);
+        }
+        else
+        {
+            panLimitX = new Vector2(-200, 1200);
+            panLimitZ = new Vector2(-200, 1200);
+        }
+
+        // Center camera over terrain, zoomed out to see the whole thing
+        float centerX = (terrain != null ? terrain.transform.position.x : 0) + terrainWidth / 2f;
+        float centerZ = (terrain != null ? terrain.transform.position.z : 0) + terrainLength / 2f;
+        float startHeight = Mathf.Max(terrainWidth, terrainLength) * 0.5f;
+
+        float offsetZ = startHeight / Mathf.Tan(startPitch * Mathf.Deg2Rad);
+        transform.position = new Vector3(centerX, startHeight, centerZ - offsetZ);
+        transform.rotation = Quaternion.Euler(startPitch, 0f, 0f);
+    }
 
     void Update()
     {

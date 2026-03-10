@@ -1,16 +1,19 @@
 using UnityEngine;
 
 /// <summary>
-/// Manages a 40x40 grid on the terrain (CoC-style).
+/// Manages a 100x100 grid on the terrain (CoC-style).
 /// Draws grid lines and provides snap-to-grid utilities.
+/// Cell size is auto-computed from the terrain dimensions.
 /// Attach this to an empty GameObject named "GridManager".
 /// </summary>
 public class GridManager : MonoBehaviour
 {
     [Header("Grid Settings")]
-    public int gridWidth = 40;
-    public int gridHeight = 40;
-    public float cellSize = 2.5f; // Each cell = 2.5 world units (40 * 2.5 = 100)
+    public int gridWidth = 100;
+    public int gridHeight = 100;
+
+    [Tooltip("Auto-computed from terrain size. Do not edit manually.")]
+    public float cellSize; // Computed in Awake: terrainSize / gridCount
 
     [Header("Grid Visual")]
     public Color gridColor = new Color(0f, 1f, 0f, 0.15f);
@@ -22,12 +25,29 @@ public class GridManager : MonoBehaviour
     // 2D array tracking which cells are occupied (true = occupied)
     private bool[,] occupiedCells;
 
+    // 2D array tracking permanently blocked cells (environment objects)
+    private bool[,] permanentCells;
+
     // Cached material for grid line drawing
     private Material lineMat;
 
     void Awake()
     {
+        // Auto-compute cell size from terrain dimensions
+        if (terrain != null && terrain.terrainData != null)
+        {
+            Vector3 terrainSize = terrain.terrainData.size;
+            cellSize = Mathf.Min(terrainSize.x / gridWidth, terrainSize.z / gridHeight);
+            Debug.Log($"[GridManager] Terrain size: {terrainSize.x}x{terrainSize.z}, Cell size: {cellSize}");
+        }
+        else
+        {
+            cellSize = 10f; // Fallback
+            Debug.LogWarning("[GridManager] No terrain assigned! Using fallback cellSize=10.");
+        }
+
         occupiedCells = new bool[gridWidth, gridHeight];
+        permanentCells = new bool[gridWidth, gridHeight];
         CreateLineMaterial();
     }
 
@@ -190,7 +210,7 @@ public class GridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Marks cells as free.
+    /// Marks cells as free. Skips permanently blocked cells (environment objects).
     /// </summary>
     public void FreeCells(Vector2Int startCell, int size)
     {
@@ -198,10 +218,39 @@ public class GridManager : MonoBehaviour
         {
             for (int z = startCell.y; z < startCell.y + size; z++)
             {
-                if (x >= 0 && x < gridWidth && z >= 0 && z < gridHeight)
+                if (x >= 0 && x < gridWidth && z >= 0 && z < gridHeight && !permanentCells[x, z])
                     occupiedCells[x, z] = false;
             }
         }
+    }
+
+    /// <summary>
+    /// Marks cells as permanently occupied (for environment objects like mountains, rivers, etc.).
+    /// These cells cannot be freed by FreeCells.
+    /// </summary>
+    public void OccupyCellsPermanent(Vector2Int startCell, int size)
+    {
+        for (int x = startCell.x; x < startCell.x + size; x++)
+        {
+            for (int z = startCell.y; z < startCell.y + size; z++)
+            {
+                if (x >= 0 && x < gridWidth && z >= 0 && z < gridHeight)
+                {
+                    occupiedCells[x, z] = true;
+                    permanentCells[x, z] = true;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if a cell is permanently blocked by an environment object.
+    /// </summary>
+    public bool IsCellPermanent(Vector2Int cell)
+    {
+        if (cell.x < 0 || cell.x >= gridWidth || cell.y < 0 || cell.y >= gridHeight)
+            return false;
+        return permanentCells[cell.x, cell.y];
     }
 
     /// <summary>
