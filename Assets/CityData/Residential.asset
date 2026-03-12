@@ -13,10 +13,6 @@ MonoBehaviour:
   m_Name: Residential
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: Residential
+  sizeInCells: 7
   prefabs:
-  - {fileID: 100000, guid: 66131d8838f42f545a30ce8606ce5365, type: 3}
-  - {fileID: 100000, guid: 1f284b42849610642bfb5d418a57840b, type: 3}
-  - {fileID: 100000, guid: 92dcd407350173049ab8c86482fadf42, type: 3}
   - {fileID: 100000, guid: 142c9543c08ae014bad9d177ad54a989, type: 3}
-  - {fileID: 100000, guid: 8c3b216cc2b6dc04496d15009bc913cd, type: 3}
-  - {fileID: 100000, guid: 3a0bc997d3424474696ad8d2e7d684ab, type: 3}

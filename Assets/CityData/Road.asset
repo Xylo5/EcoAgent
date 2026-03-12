@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: Road
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: Road
+  sizeInCells: 8
   prefabs:
-  - {fileID: 100000, guid: 4f32dfddb033d3e40b5841bc53cc1689, type: 3}
-  - {fileID: 100000, guid: 9bff4c4ffbc29a041a638ec3743c588d, type: 3}
-  - {fileID: 100000, guid: 85348f60323277544b2b17a2d5c20f17, type: 3}
-  - {fileID: 100000, guid: 5dca1204e7e935d408728950a2ad997e, type: 3}
+  - {fileID: 100000, guid: ffa95796af8d5884f9d08f66e6bb627e, type: 3}

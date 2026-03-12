@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Office
   icon: {fileID: 0}
-  sizeInCells: 3
-  prefab: {fileID: 4769571742365405487, guid: 8e8621db27ca1d54f85dfc657eb68dde, type: 3}
+  sizeInCells: 10
+  prefab: {fileID: 100000, guid: c3e95e72d6dba334594c3c5c37fcf18a, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}

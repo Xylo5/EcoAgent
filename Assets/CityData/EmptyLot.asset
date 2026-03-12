@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: EmptyLot
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: EmptyLot
+  sizeInCells: 8
   prefabs:
-  - {fileID: 100000, guid: d34e8533c8de8ec45869f9144584d929, type: 3}
-  - {fileID: 100000, guid: 64be6214af4540d40882279ed35878bd, type: 3}
+  - {fileID: 100000, guid: b74c48c2e73e17c418c9394124b75daf, type: 3}

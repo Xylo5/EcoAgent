@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Industrial
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: Industrial
+  sizeInCells: 11
   prefabs:
   - {fileID: 100000, guid: f6674c1362ba984468bc1e71a2323d66, type: 3}
-  - {fileID: 100000, guid: 121f662ea65e2cf40a50c66470757a9e, type: 3}
-  - {fileID: 100000, guid: 260808cfd9b21994d8c3007a7bc9934c, type: 3}

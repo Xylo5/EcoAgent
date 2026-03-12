@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: RiverSegment
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentData
   objectName: RiverSegment
-  sizeInCells: 1
-  prefab: {fileID: 2127396055123971865, guid: 540ba8c26d4c3c14fa84d51c088eb71d, type: 3}
+  sizeInCells: 2
+  prefab: {fileID: 100000, guid: 0ee37198b24b2164fbbccfbe92fe5d35, type: 3}

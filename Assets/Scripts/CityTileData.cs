@@ -11,6 +11,10 @@ public class CityTileData : ScriptableObject
     [Header("Tile Info")]
     public string tileName = "New Tile";
 
+    [Header("Grid Size (square, in cells)")]
+    [Range(1, 10)]
+    public int sizeInCells = 1;
+
     [Header("Prefab Variants")]
     [Tooltip("One or more prefab variants. A random one is chosen per placement.")]
     public GameObject[] prefabs;

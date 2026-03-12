@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Hut
   icon: {fileID: 0}
-  sizeInCells: 1
-  prefab: {fileID: 2097737380184079616, guid: cf49ad6391ff2cf41a3ab50dc6422b9b, type: 3}
+  sizeInCells: 4
+  prefab: {fileID: 100000, guid: 4dc7028a3a83758439585b7c7c98cb27, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}

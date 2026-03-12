@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Mountain
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentData
   objectName: Mountain
-  sizeInCells: 3
-  prefab: {fileID: 2633433515142940895, guid: 0cbb3a4c4b0f94e45a80558638ab712e, type: 3}
+  sizeInCells: 1
+  prefab: {fileID: 100000, guid: dac1a631b172e66469fb09e9987bcf57, type: 3}

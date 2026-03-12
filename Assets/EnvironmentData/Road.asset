@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Road
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentData
   objectName: Road
-  sizeInCells: 1
-  prefab: {fileID: 2922104419806690706, guid: 6fee78569b17ca444ae60c5619b347a3, type: 3}
+  sizeInCells: 8
+  prefab: {fileID: 100000, guid: ffa95796af8d5884f9d08f66e6bb627e, type: 3}

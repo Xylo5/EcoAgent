@@ -45,17 +45,17 @@ public class GridManager : MonoBehaviour
                 Debug.LogWarning("[GridManager] No Terrain found in scene!");
         }
 
-        // Auto-compute cell size from terrain dimensions
+        // Force cell size to 2.5 as requested
+        cellSize = 2.5f;
+        
         if (terrain != null && terrain.terrainData != null)
         {
             Vector3 terrainSize = terrain.terrainData.size;
-            cellSize = Mathf.Min(terrainSize.x / gridWidth, terrainSize.z / gridHeight);
-            Debug.Log($"[GridManager] Terrain size: {terrainSize.x}x{terrainSize.z}, Cell size: {cellSize}");
+            Debug.Log($"[GridManager] Terrain size: {terrainSize.x}x{terrainSize.z}, Cell size fixed to: {cellSize}");
         }
         else
         {
-            cellSize = 2.5f; // Fallback for 250/100
-            Debug.LogWarning("[GridManager] No terrain assigned! Using fallback cellSize=2.5.");
+            Debug.LogWarning("[GridManager] No terrain assigned! Using fixed cellSize=2.5.");
         }
 
         occupiedCells = new bool[gridWidth, gridHeight];

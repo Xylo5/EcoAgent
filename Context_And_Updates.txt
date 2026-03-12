@@ -1,0 +1,23 @@
+Eco Project - Context and Updates Summary
+
+CONTEXT:
+- Game: Eco, a 3D city builder (Clash of Clans style) in Unity (URP + new Input System).
+- Core Mechanics: 100x100 grid building placement (place, relocate, demolish), RTS camera.
+- Scenes: MainMenu, LevelSelect, Level_0 (Gameplay), MapGenerator (WFC/Grid Generator).
+- Assets: SimplePoly City low-poly pack.
+
+RECENT UPDATES (Grid & Map Generation):
+1. Cell Size Fixed:
+   - GridManager.cs updated to force a strict cell size of 2.5 units.
+
+2. Size Support Added to CityTiles:
+   - CityTileData.cs updated to include a 'sizeInCells' variable (1 to 10 scale).
+
+3. Variable-Size Map Generator:
+   - WFCCityGenerator.cs completely rewritten.
+   - It is now a randomized grid placer that dynamically reads each prefab's 'sizeInCells'.
+   - Ensures larger SimplePoly prefabs (like 2x2 or 5x5 blocks) check the grid bounds and do not overlap.
+
+4. Automated Setup Tool Created:
+   - Added a new Editor script: Tools -> Apply SimplePoly Asset Prefabs.
+   - This tool automatically assigns the SimplePoly 3D models to the ScriptableObjects (Buildings, Environment, CityTiles) and accurately calculates their real-world 3D bounds to set the proper 'sizeInCells' on the 2.5 unit grid.
