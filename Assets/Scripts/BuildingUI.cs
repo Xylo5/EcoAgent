@@ -4,10 +4,10 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Building shop panel with keyboard navigation.
-/// Tab cycles through buildings, Enter selects.
-/// Disables input for 1 frame after selecting to prevent BuildingPlacer
-/// from reading the same Enter press.
+/// Two-level building shop.
+/// A fixed "Buildings" button at the top-right of the screen (always visible).
+/// Clicking it toggles a submenu ribbon with individual building options.
+/// After placing a building, the submenu closes and user must click "Buildings" again.
 /// </summary>
 public class BuildingUI : MonoBehaviour
 {
@@ -27,37 +27,39 @@ public class BuildingUI : MonoBehaviour
     public Color selectedColor = new Color(0.1f, 0.6f, 0.1f, 1f);
 
     private int selectedIndex = 0;
+    private bool submenuOpen = false;
+    private bool initialized = false;
+
+    // Fixed "Buildings" button (created programmatically at top-right)
+    private GameObject buildingsButtonObj;
+
+    // Building submenu buttons
     private GameObject[] buttonObjects;
     private Image[] buttonImages;
-    private bool shopActive = true;
-    private bool initialized = false;
 
     void Start()
     {
+        CreateFixedBuildingsButton();
         CreateBuildingButtons();
-        UpdateButtonHighlight();
+
+        // Start with submenu closed
+        HideSubmenu();
     }
 
     void Update()
     {
-        // Skip first frame — prevents stale left-click from scene load triggering selection
+        // Skip first frame
         if (!initialized)
         {
             initialized = true;
             return;
         }
 
-        // Tab reopens the shop if closed, then cycles buildings
+        if (!submenuOpen) return;
+
+        // Tab cycles through buildings in submenu
         if (InputManager.Instance.GetTabDown())
         {
-            // If shop is hidden, reopen it first
-            if (!shopActive)
-            {
-                ShowShop();
-                return;
-            }
-
-            // Cycle through buildings
             if (InputManager.Instance.GetShiftHeld())
                 selectedIndex = (selectedIndex - 1 + buildings.Length) % buildings.Length;
             else
@@ -66,16 +68,79 @@ public class BuildingUI : MonoBehaviour
             UpdateButtonHighlight();
         }
 
-        // Enter = select the highlighted building (only when shop is open)
-        if (shopActive && InputManager.Instance.GetEnterDown())
+        // Enter = select the highlighted building
+        if (InputManager.Instance.GetEnterDown())
         {
             if (buildings.Length > 0)
             {
-                buildingPlacer.StartPlacing(buildings[selectedIndex]);
-                HideShop();
+                SelectBuilding(selectedIndex);
             }
         }
+
+        // Escape = close submenu
+        if (InputManager.Instance.GetEscapeDown())
+        {
+            HideSubmenu();
+        }
     }
+
+    // ═══════════════════════════════════════════
+    //  FIXED "BUILDINGS" BUTTON (top-right)
+    // ═══════════════════════════════════════════
+
+    void CreateFixedBuildingsButton()
+    {
+        // Find the Canvas that the shopPanel lives on
+        Canvas canvas = shopPanel.GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
+        // Create button using the same prefab
+        buildingsButtonObj = Instantiate(buttonPrefab, canvas.transform);
+        buildingsButtonObj.name = "Btn_Buildings_Fixed";
+
+        // Set text
+        TextMeshProUGUI btnText = buildingsButtonObj.GetComponentInChildren<TextMeshProUGUI>();
+        if (btnText != null)
+            btnText.text = "Buildings";
+
+        // Style the button
+        Image btnImage = buildingsButtonObj.GetComponent<Image>();
+        if (btnImage != null)
+            btnImage.color = new Color(0.15f, 0.55f, 0.30f, 1f); // Green like menu button
+
+        // Position at top-right, anchored to top-right corner
+        RectTransform rect = buildingsButtonObj.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-20f, -10f); // 20px from right, 10px from top
+            rect.sizeDelta = new Vector2(140f, 45f);
+        }
+
+        // Mouse click → toggle submenu
+        EventTrigger trigger = buildingsButtonObj.GetComponent<EventTrigger>();
+        if (trigger == null)
+            trigger = buildingsButtonObj.AddComponent<EventTrigger>();
+
+        EventTrigger.Entry clickEntry = new EventTrigger.Entry();
+        clickEntry.eventID = EventTriggerType.PointerClick;
+        clickEntry.callback.AddListener((_) => ToggleSubmenu());
+        trigger.triggers.Add(clickEntry);
+    }
+
+    void ToggleSubmenu()
+    {
+        if (submenuOpen)
+            HideSubmenu();
+        else
+            ShowSubmenu();
+    }
+
+    // ═══════════════════════════════════════════
+    //  BUILDING SUBMENU
+    // ═══════════════════════════════════════════
 
     void CreateBuildingButtons()
     {
@@ -95,23 +160,40 @@ public class BuildingUI : MonoBehaviour
             buttonObjects[i] = btnObj;
             buttonImages[i] = btnObj.GetComponent<Image>();
 
-            // Mouse hover → highlight this option
-            int index = i; // capture for closure
+            int idx = i;
             EventTrigger trigger = btnObj.GetComponent<EventTrigger>();
             if (trigger == null)
                 trigger = btnObj.AddComponent<EventTrigger>();
 
             EventTrigger.Entry hoverEntry = new EventTrigger.Entry();
             hoverEntry.eventID = EventTriggerType.PointerEnter;
-            hoverEntry.callback.AddListener((_) => OnButtonHover(index));
+            hoverEntry.callback.AddListener((_) => OnButtonHover(idx));
             trigger.triggers.Add(hoverEntry);
 
-            // Mouse click → select this building directly
             EventTrigger.Entry clickEntry = new EventTrigger.Entry();
             clickEntry.eventID = EventTriggerType.PointerClick;
-            clickEntry.callback.AddListener((_) => OnButtonClick(index));
+            clickEntry.callback.AddListener((_) => OnButtonClick(idx));
             trigger.triggers.Add(clickEntry);
         }
+    }
+
+    void ShowSubmenu()
+    {
+        submenuOpen = true;
+        selectedIndex = 0;
+
+        if (shopPanel != null)
+            shopPanel.SetActive(true);
+
+        UpdateButtonHighlight();
+    }
+
+    void HideSubmenu()
+    {
+        submenuOpen = false;
+
+        if (shopPanel != null)
+            shopPanel.SetActive(false);
     }
 
     void UpdateButtonHighlight()
@@ -127,19 +209,34 @@ public class BuildingUI : MonoBehaviour
         }
     }
 
-    public void HideShop()
+    void SelectBuilding(int index)
     {
-        shopActive = false;
-        if (shopPanel != null)
-            shopPanel.SetActive(false);
+        selectedIndex = index;
+        buildingPlacer.StartPlacing(buildings[selectedIndex]);
+        HideSubmenu();
     }
 
+    // ═══════════════════════════════════════════
+    //  PUBLIC API (called by BuildingPlacer)
+    // ═══════════════════════════════════════════
+
+    /// <summary>
+    /// Called by BuildingPlacer after placement/cancel.
+    /// Closes the submenu — user must click "Buildings" again to reopen.
+    /// </summary>
+    public void HideShop()
+    {
+        HideSubmenu();
+    }
+
+    /// <summary>
+    /// Called by BuildingPlacer after cancel/cleanup.
+    /// Now just closes the submenu instead of reopening it.
+    /// </summary>
     public void ShowShop()
     {
-        shopActive = true;
-        if (shopPanel != null)
-            shopPanel.SetActive(true);
-        UpdateButtonHighlight();
+        // Don't auto-open — user must click "Buildings" button to reopen
+        HideSubmenu();
     }
 
     // ═══════════════════════════════════════════
@@ -148,17 +245,14 @@ public class BuildingUI : MonoBehaviour
 
     private void OnButtonHover(int index)
     {
-        if (!shopActive) return;
+        if (!submenuOpen) return;
         selectedIndex = index;
         UpdateButtonHighlight();
     }
 
     private void OnButtonClick(int index)
     {
-        if (!shopActive || buildings.Length == 0) return;
-        selectedIndex = index;
-        UpdateButtonHighlight();
-        buildingPlacer.StartPlacing(buildings[selectedIndex]);
-        HideShop();
+        if (!submenuOpen || buildings.Length == 0) return;
+        SelectBuilding(index);
     }
 }
