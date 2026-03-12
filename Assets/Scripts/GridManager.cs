@@ -129,7 +129,7 @@ public class GridManager : MonoBehaviour
     {
         float x = terrainOrigin.x + cell.x * cellSize + cellSize / 2f;
         float z = terrainOrigin.z + cell.y * cellSize + cellSize / 2f;
-        float y = terrain.SampleHeight(new Vector3(x, 0, z)) + terrainOrigin.y;
+        float y = terrain != null ? terrain.SampleHeight(new Vector3(x, 0, z)) + terrainOrigin.y : terrainOrigin.y;
         return new Vector3(x, y, z);
     }
 
@@ -150,7 +150,7 @@ public class GridManager : MonoBehaviour
 
         float snappedX = terrainOrigin.x + cellX * cellSize + (buildingSize * cellSize) / 2f;
         float snappedZ = terrainOrigin.z + cellZ * cellSize + (buildingSize * cellSize) / 2f;
-        float snappedY = terrain.SampleHeight(new Vector3(snappedX, 0, snappedZ)) + terrainOrigin.y;
+        float snappedY = terrain != null ? terrain.SampleHeight(new Vector3(snappedX, 0, snappedZ)) + terrainOrigin.y : terrainOrigin.y;
 
         return new Vector3(snappedX, snappedY, snappedZ);
     }

@@ -33,6 +33,7 @@ public class WFCCityGenerator : MonoBehaviour
     private int gridWidth;
     private int gridHeight;
     private float cellSize;
+    private Vector3 cachedTerrainOrigin;
 
     // ═══════════════════════════════════════════
     //  PUBLIC API
@@ -60,7 +61,13 @@ public class WFCCityGenerator : MonoBehaviour
         // Cache grid dimensions from GridManager.
         gridWidth  = gridManager.gridWidth;
         gridHeight = gridManager.gridHeight;
+        // cellSize may be 0 in edit mode (Awake hasn't run), fall back to 2.5.
         cellSize   = gridManager.cellSize > 0f ? gridManager.cellSize : 2.5f;
+
+        // Cache terrain origin so tiles align to the terrain, not this transform.
+        cachedTerrainOrigin = (gridManager.terrain != null)
+            ? gridManager.terrain.transform.position
+            : Vector3.zero;
 
         ClearCity();
 
@@ -111,7 +118,25 @@ public class WFCCityGenerator : MonoBehaviour
                     }
 
                     instance.name = $"{tile.tileName}_{x}_{z}";
+
+                    // Put on Ignore Raycast so tiles don't block BuildingPlacer mouse input.
+                    SetLayerRecursive(instance, LayerMask.NameToLayer("Ignore Raycast"));
+
                     placedCount++;
+                }
+            }
+        }
+
+        // Mark all placed cells as permanently occupied in GridManager
+        // so BuildingPlacer won't allow buildings on top of generated tiles.
+        if (Application.isPlaying)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int z = 0; z < gridHeight; z++)
+                {
+                    if (placedGrid[x, z])
+                        gridManager.OccupyCellsPermanent(new Vector2Int(x, z), 1);
                 }
             }
         }
@@ -165,13 +190,18 @@ public class WFCCityGenerator : MonoBehaviour
 
     private Vector3 GetWorldPosition(Vector2Int cell, int size)
     {
-        Vector3 origin = transform.position;
-        // In original WFCCityGenerator, it just adds to `origin`.
-        // We match GridManager's footprint logic: center of the size-cells block.
-        return origin + new Vector3(
+        // Use terrain origin so tiles align to the GridManager's grid.
+        return cachedTerrainOrigin + new Vector3(
             cell.x * cellSize + (size * cellSize) * 0.5f,
             0f,
             cell.y * cellSize + (size * cellSize) * 0.5f
         );
+    }
+
+    private void SetLayerRecursive(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursive(child.gameObject, layer);
     }
 }

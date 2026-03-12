@@ -79,7 +79,8 @@ public class BuildingPlacer : MonoBehaviour
         // Try placing at mouse position first, if valid based on raycast, else fallback
         lastMousePos = InputManager.Instance.GetMousePosition();
         Ray ray = mainCamera.ScreenPointToRay(lastMousePos);
-        Plane plane = new Plane(Vector3.up, new Vector3(0, gridManager.terrain.transform.position.y, 0));
+        float terrainY = gridManager.terrain != null ? gridManager.terrain.transform.position.y : 0f;
+        Plane plane = new Plane(Vector3.up, new Vector3(0, terrainY, 0));
         if (plane.Raycast(ray, out float enter))
         {
             Vector3 hitPoint = ray.GetPoint(enter);
@@ -163,7 +164,8 @@ public class BuildingPlacer : MonoBehaviour
             lastMousePos = currentMousePos;
             Ray ray = mainCamera.ScreenPointToRay(currentMousePos);
             // Math plane at terrain height
-            Plane plane = new Plane(Vector3.up, new Vector3(0, gridManager.terrain.transform.position.y, 0));
+            float terrainY = gridManager.terrain != null ? gridManager.terrain.transform.position.y : 0f;
+            Plane plane = new Plane(Vector3.up, new Vector3(0, terrainY, 0));
             if (plane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
@@ -345,10 +347,10 @@ public class BuildingPlacer : MonoBehaviour
 
     private Vector3 GridCellToWorldPos(Vector2Int cell, int size)
     {
-        Vector3 terrainPos = gridManager.terrain.transform.position;
+        Vector3 terrainPos = gridManager.terrain != null ? gridManager.terrain.transform.position : Vector3.zero;
         float x = terrainPos.x + cell.x * gridManager.cellSize + (size * gridManager.cellSize) / 2f;
         float z = terrainPos.z + cell.y * gridManager.cellSize + (size * gridManager.cellSize) / 2f;
-        float y = gridManager.terrain.SampleHeight(new Vector3(x, 0, z)) + terrainPos.y;
+        float y = gridManager.terrain != null ? gridManager.terrain.SampleHeight(new Vector3(x, 0, z)) + terrainPos.y : terrainPos.y;
         return new Vector3(x, y, z);
     }
 
