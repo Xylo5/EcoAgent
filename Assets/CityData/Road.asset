@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21fd0c39dee4aa14499ff0b1d1172088, type: 3}
+  m_Name: Road
+  m_EditorClassIdentifier: Assembly-CSharp::CityTileData
+  tileName: Road
+  prefabs:
+  - {fileID: 100000, guid: 4f32dfddb033d3e40b5841bc53cc1689, type: 3}
+  - {fileID: 100000, guid: 9bff4c4ffbc29a041a638ec3743c588d, type: 3}
+  - {fileID: 100000, guid: 85348f60323277544b2b17a2d5c20f17, type: 3}
+  - {fileID: 100000, guid: 5dca1204e7e935d408728950a2ad997e, type: 3}

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21fd0c39dee4aa14499ff0b1d1172088, type: 3}
+  m_Name: Park
+  m_EditorClassIdentifier: Assembly-CSharp::CityTileData
+  tileName: Park
+  prefabs:
+  - {fileID: 100000, guid: b74c48c2e73e17c418c9394124b75daf, type: 3}
+  - {fileID: 100000, guid: b82e76f4092b7d24aaeecddf36fe8d3b, type: 3}
+  - {fileID: 100000, guid: 2509cc5763ca17f4598bf61fd585a93e, type: 3}
