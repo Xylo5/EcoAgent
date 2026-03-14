@@ -33,10 +33,6 @@ public class BuildingPlacer : MonoBehaviour
     private PlacedBuilding movingBuilding;
     private bool canPlace = false;
 
-    // Effective footprint/offset used for the currently selected prefab.
-    private int currentPlacementSize = 1;
-    private Vector3 currentVisualOffset = Vector3.zero;
-
     // Grid cell position of the ghost (bottom-left corner)
     private Vector2Int ghostGridCell;
 
@@ -73,8 +69,6 @@ public class BuildingPlacer : MonoBehaviour
         currentBuildingData = building;
         state = PlacerState.PlacingNew;
         movingBuilding = null;
-        currentPlacementSize = Mathf.Max(1, building.sizeInCells);
-        currentVisualOffset = Vector3.zero;
 
         // Block Enter for 2 frames so the same keypress doesn't confirm
         confirmCooldown = 2;
@@ -91,8 +85,8 @@ public class BuildingPlacer : MonoBehaviour
         }
 
         // Start ghost at grid center
-        int centerX = (gridManager.gridWidth - currentPlacementSize) / 2;
-        int centerZ = (gridManager.gridHeight - currentPlacementSize) / 2;
+        int centerX = (gridManager.gridWidth - building.sizeInCells) / 2;
+        int centerZ = (gridManager.gridHeight - building.sizeInCells) / 2;
 
         // Try placing at mouse position first, if valid based on raycast, else fallback
         lastMousePos = InputManager.Instance.GetMousePosition();
@@ -102,31 +96,18 @@ public class BuildingPlacer : MonoBehaviour
         if (plane.Raycast(ray, out float enter))
         {
             Vector3 hitPoint = ray.GetPoint(enter);
-            ghostGridCell = gridManager.GetBuildingGridCell(hitPoint, currentPlacementSize);
+            ghostGridCell = gridManager.GetBuildingGridCell(hitPoint, building.sizeInCells);
         }
         else
         {
             ghostGridCell = new Vector2Int(centerX, centerZ);
         }
 
-        Vector3 worldPos = GridCellToWorldPos(ghostGridCell, currentPlacementSize);
+        Vector3 worldPos = GridCellToWorldPos(ghostGridCell, building.sizeInCells);
         worldPos.y += ghostLiftHeight;
 
         ghostObject = Instantiate(building.prefab, worldPos, Quaternion.identity);
         ghostObject.name = "Ghost_" + building.buildingName;
-
-        UpdatePlacementMetricsFromGhost();
-
-        // Recompute with measured footprint in case prefab is larger than data size.
-        centerX = (gridManager.gridWidth - currentPlacementSize) / 2;
-        centerZ = (gridManager.gridHeight - currentPlacementSize) / 2;
-        ghostGridCell.x = Mathf.Clamp(ghostGridCell.x, 0, gridManager.gridWidth - currentPlacementSize);
-        ghostGridCell.y = Mathf.Clamp(ghostGridCell.y, 0, gridManager.gridHeight - currentPlacementSize);
-
-        Vector3 adjustedPos = GridCellToWorldPos(ghostGridCell, currentPlacementSize);
-        adjustedPos += Vector3.up * ghostLiftHeight;
-        adjustedPos += currentVisualOffset;
-        ghostObject.transform.position = adjustedPos;
 
         foreach (Collider col in ghostObject.GetComponentsInChildren<Collider>())
             col.enabled = false;
@@ -185,7 +166,7 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (ghostObject == null || currentBuildingData == null) return;
 
-        int size = currentPlacementSize;
+        int size = currentBuildingData.sizeInCells;
         bool positionChanged = false;
 
         // --- Mouse Movement (skip if pointer is over UI) ---
@@ -259,8 +240,7 @@ public class BuildingPlacer : MonoBehaviour
         if (positionChanged)
         {
             Vector3 worldPos = GridCellToWorldPos(ghostGridCell, size);
-            worldPos += Vector3.up * ghostLiftHeight;
-            worldPos += currentVisualOffset;
+            worldPos.y += ghostLiftHeight;
             ghostObject.transform.position = worldPos;
 
             UpdateValidity();
@@ -306,7 +286,7 @@ public class BuildingPlacer : MonoBehaviour
     {
         if (ghostObject == null || currentBuildingData == null) return;
 
-        int size = currentPlacementSize;
+        int size = currentBuildingData.sizeInCells;
 
         if (state == PlacerState.MovingExisting && movingBuilding != null)
             canPlace = gridManager.IsAreaAvailable(ghostGridCell, size, movingBuilding);
@@ -330,9 +310,8 @@ public class BuildingPlacer : MonoBehaviour
 
     private void ConfirmNewPlacement()
     {
-        int size = currentPlacementSize;
+        int size = currentBuildingData.sizeInCells;
         Vector3 finalPos = GridCellToWorldPos(ghostGridCell, size);
-        finalPos += currentVisualOffset;
 
         GameObject building = Instantiate(currentBuildingData.prefab, finalPos, Quaternion.identity);
         building.name = currentBuildingData.buildingName;
@@ -359,9 +338,8 @@ public class BuildingPlacer : MonoBehaviour
 
     private void ConfirmMovePlacement()
     {
-        int size = currentPlacementSize;
+        int size = currentBuildingData.sizeInCells;
         Vector3 finalPos = GridCellToWorldPos(ghostGridCell, size);
-        finalPos += currentVisualOffset;
 
         movingBuilding.PutDown(gridManager, finalPos, ghostGridCell);
         SetBuildingVisible(movingBuilding.gameObject, true);
@@ -404,47 +382,17 @@ public class BuildingPlacer : MonoBehaviour
         {
             foreach (Material mat in rend.materials)
             {
-                // URP-safe tinting: colorize without forcing legacy Standard shader blend state.
-                if (mat.HasProperty("_BaseColor"))
-                    mat.SetColor("_BaseColor", color);
-
-                if (mat.HasProperty("_Color"))
-                    mat.SetColor("_Color", color);
+                mat.color = color;
+                mat.SetFloat("_Mode", 3);
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                mat.SetInt("_ZWrite", 0);
+                mat.DisableKeyword("_ALPHATEST_ON");
+                mat.EnableKeyword("_ALPHABLEND_ON");
+                mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                mat.renderQueue = 3000;
             }
         }
-    }
-
-    private void UpdatePlacementMetricsFromGhost()
-    {
-        if (ghostObject == null)
-        {
-            currentPlacementSize = Mathf.Max(1, currentBuildingData != null ? currentBuildingData.sizeInCells : 1);
-            currentVisualOffset = Vector3.zero;
-            return;
-        }
-
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>(true);
-        if (renderers == null || renderers.Length == 0)
-        {
-            currentPlacementSize = Mathf.Max(1, currentBuildingData != null ? currentBuildingData.sizeInCells : 1);
-            currentVisualOffset = Vector3.zero;
-            return;
-        }
-
-        Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
-            bounds.Encapsulate(renderers[i].bounds);
-
-        float maxSize = Mathf.Max(bounds.size.x, bounds.size.z);
-        int measuredSize = Mathf.Max(1, Mathf.CeilToInt(maxSize / gridManager.cellSize));
-        currentPlacementSize = Mathf.Max(currentPlacementSize, measuredSize);
-
-        // Center X/Z on the grid cell, bottom-align Y so the model sits on the ground.
-        currentVisualOffset = new Vector3(
-            ghostObject.transform.position.x - bounds.center.x,
-            ghostObject.transform.position.y - bounds.min.y,
-            ghostObject.transform.position.z - bounds.center.z
-        );
     }
 
     private void SetBuildingVisible(GameObject obj, bool visible)

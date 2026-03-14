@@ -15,11 +15,7 @@ MonoBehaviour:
   buildingName: Park
   icon: {fileID: 0}
   sizeInCells: 4
-<<<<<<< Updated upstream
   prefab: {fileID: 499336189010579994, guid: 85bc12ae16ed450799dba730fc61acc5, type: 3}
-=======
-  prefab: {fileID: 5553909407216072623, guid: 66e394cffbf1c47429e7f49bad90a3d4, type: 3}
->>>>>>> Stashed changes
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: -90

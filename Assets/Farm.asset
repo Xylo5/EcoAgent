@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingName: Farm
   icon: {fileID: 0}
   sizeInCells: 7
-  prefab: {fileID: 8460503563806827883, guid: e94774417d5f22a4099dd86262fc7094, type: 3}
+  prefab: {fileID: 348973122829743012, guid: e7c140630f2d44899792c68a20d19678, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: -60
