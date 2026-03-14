@@ -17,7 +17,7 @@ public class GridCellHighlighter : MonoBehaviour
     // Pool of quad GameObjects
     private GameObject[] quadPool;
     private Renderer[] quadRenderers; // Cached renderers — no per-frame GetComponent
-    private int maxQuads = 25; // max 5x5 building
+    private int maxQuads = 225; // max 15x15 building
     private int activeQuads = 0;
 
     // MaterialPropertyBlock avoids creating per-quad material instances

@@ -35,12 +35,13 @@ RECOVERY:
   - Assets/_Recovery/0.unity — Scene backup.
 
 ================================================================================
-SCRIPTS (Assets/Scripts/) — 19 Scripts
+SCRIPTS (Assets/Scripts/) — 20 Scripts
 ================================================================================
 
 1. BuildingData.cs (ScriptableObject)
    - Data container for building types.
-   - Fields: buildingName, icon, sizeInCells (1–5, square), prefab, validColor, invalidColor.
+   - Fields: buildingName, icon, sizeInCells (1–15, square), prefab, validColor, invalidColor,
+     pollutionValue (positive = pollutes, negative = absorbs).
 
 2. BuildingPlacer.cs (MonoBehaviour)
    - Core building placement system with 3 states: Idle, PlacingNew, MovingExisting.
@@ -127,6 +128,11 @@ SCRIPTS (Assets/Scripts/) — 19 Scripts
     - maxAttempts = gridWidth * gridHeight * maxRetries (default 10).
     - Seed support (0 = random). Generated tiles placed on "Ignore Raycast" layer.
     - Marks cells permanent at runtime via GridManager.OccupyCellsPermanent().
+
+20. PollutionManager.cs (MonoBehaviour, Singleton)
+    - Tracks total pollution starting at 100 (configurable).
+    - AddPollution(int) updates counter; called by BuildingPlacer on placement.
+    - UI text auto-anchored to top-center, color-coded: green (<0), yellow (0–49), red (>=50).
 
 ================================================================================
 EDITOR SCRIPTS (Assets/Editor/) — 8 Scripts
@@ -268,3 +274,33 @@ UPDATE 16 — Input & Null Reference Fixes (Part 2):
    - MainMenuUI.cs: Changed Update() to use GetEnterKeyDown() instead of GetEnterDown().
      Prevents left-click on Start button from double-firing scene load (once via onClick,
      once via GetEnterDown).
+
+UPDATE 17 — Review Fixes (maxQuads + generator script):
+   - GridCellHighlighter.cs: maxQuads increased from 25 to 225 to support buildings up to
+     15x15 (matching BuildingData.sizeInCells range [1, 15]).
+   - generate_buildings.py: Fixed BASE path from hardcoded user path to auto-detect via
+     os.path.dirname(__file__). Fixed prefab fileID mismatch — make_prefab() now returns
+     (content, go_id) tuple; make_building_data() uses actual root GameObject fileID instead
+     of hardcoded 100000.
+
+UPDATE 18 — New Building Assets + Placeholder Prefabs:
+   - Added 10 new buildings: Market (5x5), Hospital (6x6), Park (4x4), Fountain (3x3),
+     Garden (3x3), Recycle (4x4), Farm (7x7), Water (5x5), Heritage (5x5), Gas (4x4).
+   - Each has: BuildingData .asset, URP Lit material (Mat_*.mat), placeholder prefab (PH-*.prefab).
+   - BuildingUIWiring.cs editor tool: Tools > Wire All Buildings to BuildingUI — auto-populates
+     the BuildingUI.buildings array with all BuildingData assets found in the project.
+   - BuildingData.cs: sizeInCells range expanded from [1, 5] to [1, 15].
+
+UPDATE 19 — Pollution System:
+   - BuildingData.cs: Added pollutionValue field (int, default 0) under "Environment Impact"
+     header. Positive = pollutes, negative = cleans/absorbs.
+   - PollutionManager.cs (new, MonoBehaviour, Singleton): Tracks total pollution starting at
+     100 (configurable via startingPollution). AddPollution(int) updates the counter.
+     UI text auto-positioned at top-center of screen (anchored, 28pt, centered).
+     Color-coded: green (< 0), yellow (0–49), red (>= 50).
+   - BuildingPlacer.cs: ConfirmNewPlacement() calls PollutionManager.Instance.AddPollution()
+     with the placed building's pollutionValue after occupying cells.
+   - Pollution values assigned to all 14 buildings:
+       Park: -90, Water: -85, Garden: -80, Recycle: -75, Farm: -60, Fountain: -50
+       Hut: +50, Heritage: +55, House: +60, Market: +65, Hospital: +70, Office: +75,
+       Gas: +95, Factory: +100

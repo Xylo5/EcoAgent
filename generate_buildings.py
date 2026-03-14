@@ -6,7 +6,7 @@ import os
 import uuid
 import random
 
-BASE = r"c:\Users\Pratham Gupta\Eco\Assets"
+BASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Assets")
 
 # BuildingData.cs script GUID (constant across all assets)
 BUILDING_DATA_SCRIPT_GUID = "4102b1b6f7a4089458d6ccb9e970876f"
@@ -184,7 +184,7 @@ def make_prefab(name, sx, sy, sz, mat_guid):
     mf_id = make_file_id()
     mr_id = make_file_id()
     bc_id = make_file_id()
-    return f"""%YAML 1.1
+    content = f"""%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1 &{go_id}
 GameObject:
@@ -299,9 +299,10 @@ BoxCollider:
   m_Size: {{x: 1, y: 1, z: 1}}
   m_Center: {{x: 0, y: 0, z: 0}}
 """
+    return content, go_id
 
 # ── BuildingData .asset template ───────────────────────────────────
-def make_building_data(asset_name, building_name, size, prefab_guid):
+def make_building_data(asset_name, building_name, size, prefab_guid, prefab_root_id):
     return f"""%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
@@ -319,7 +320,7 @@ MonoBehaviour:
   buildingName: {building_name}
   icon: {{fileID: 0}}
   sizeInCells: {size}
-  prefab: {{fileID: 100000, guid: {prefab_guid}, type: 3}}
+  prefab: {{fileID: {prefab_root_id}, guid: {prefab_guid}, type: 3}}
   validColor: {{r: 0, g: 1, b: 0, a: 0.5}}
   invalidColor: {{r: 1, g: 0, b: 0, a: 0.5}}
 """
@@ -374,8 +375,9 @@ def main():
         prefab_path = os.path.join(prefab_dir, f"{prefab_name}.prefab")
         prefab_meta_path = prefab_path + ".meta"
 
+        prefab_content, prefab_root_id = make_prefab(prefab_name, sx, sy, sz, mat_guid)
         with open(prefab_path, "w", newline="\n") as f:
-            f.write(make_prefab(prefab_name, sx, sy, sz, mat_guid))
+            f.write(prefab_content)
         with open(prefab_meta_path, "w", newline="\n") as f:
             f.write(make_prefab_meta(prefab_guid))
 
@@ -385,7 +387,7 @@ def main():
         asset_meta_path = asset_path + ".meta"
 
         with open(asset_path, "w", newline="\n") as f:
-            f.write(make_building_data(name, name, size, prefab_guid))
+            f.write(make_building_data(name, name, size, prefab_guid, prefab_root_id))
         with open(asset_meta_path, "w", newline="\n") as f:
             f.write(make_native_meta(asset_guid, 11400000))
 

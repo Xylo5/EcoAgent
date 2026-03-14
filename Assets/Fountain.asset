@@ -18,3 +18,4 @@ MonoBehaviour:
   prefab: {fileID: 182201809777170433, guid: 52aae0e5480a4154932874fba9efb095, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
+  pollutionValue: -50

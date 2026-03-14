@@ -327,6 +327,10 @@ public class BuildingPlacer : MonoBehaviour
             building.AddComponent<BoxCollider>();
 
         gridManager.OccupyCells(ghostGridCell, size);
+
+        if (PollutionManager.Instance != null)
+            PollutionManager.Instance.AddPollution(currentBuildingData.pollutionValue);
+
         Debug.Log($"[BuildingPlacer] Placed {currentBuildingData.buildingName} at ({ghostGridCell.x}, {ghostGridCell.y})");
 
         CleanupPlacement();

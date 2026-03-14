@@ -22,4 +22,8 @@ public class BuildingData : ScriptableObject
     [Header("Placement Colors")]
     public Color validColor = new Color(0f, 1f, 0f, 0.5f);   // Green
     public Color invalidColor = new Color(1f, 0f, 0f, 0.5f);  // Red
+
+    [Header("Environment Impact")]
+    [Tooltip("Pollution value. Positive = pollutes, Negative = cleans/absorbs pollution.")]
+    public int pollutionValue = 0;
 }
