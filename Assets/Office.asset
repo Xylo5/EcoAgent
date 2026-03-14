@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingName: Office
   icon: {fileID: 0}
   sizeInCells: 10
-  prefab: {fileID: 100000, guid: c3e95e72d6dba334594c3c5c37fcf18a, type: 3}
+  prefab: {fileID: 919132149155446097, guid: 9d1277534012f544483d9c6d9910bce8, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 75

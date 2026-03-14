@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingName: Hospital
   icon: {fileID: 0}
   sizeInCells: 6
-  prefab: {fileID: 350781278098132769, guid: f6ced9d670004b17b380a41297d37043, type: 3}
+  prefab: {fileID: 363025940278517486, guid: eb1a3f979ef5c8743a26ef5a30ec6511, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 70

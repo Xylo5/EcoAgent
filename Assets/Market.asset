@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingName: Market
   icon: {fileID: 0}
   sizeInCells: 5
-  prefab: {fileID: 415241313279143829, guid: 66904bffd5ce4a9d8cab81a49dc41cba, type: 3}
+  prefab: {fileID: 4722627683411591535, guid: 580e175accc4f644e8c5daa4090d0293, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 65

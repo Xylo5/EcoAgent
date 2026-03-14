@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingName: Park
   icon: {fileID: 0}
   sizeInCells: 4
-  prefab: {fileID: 499336189010579994, guid: 85bc12ae16ed450799dba730fc61acc5, type: 3}
+  prefab: {fileID: 100026, guid: 72e643619fa32984785527a0c110a313, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: -90

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Fountain
   icon: {fileID: 0}
-  sizeInCells: 3
-  prefab: {fileID: 182201809777170433, guid: 52aae0e5480a4154932874fba9efb095, type: 3}
+  sizeInCells: 5
+  prefab: {fileID: 8856338496850619661, guid: 5c5daa5253075024e8411521205c1f37, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: -50
