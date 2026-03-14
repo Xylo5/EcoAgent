@@ -16,8 +16,8 @@ public class GridManager : MonoBehaviour
     public float cellSize; // Computed in Awake: terrainSize / gridCount
 
     [Header("Grid Visual")]
-    public Color gridColor = new Color(0f, 0f, 0f, 0.8f);
-    public float lineWidth = 0.12f;
+    public Color gridColor = new Color(0.2f, 1f, 0.3f, 0.5f);
+    public float lineWidth = 0.06f;
     public bool showGrid = true;
 
     [Header("References")]
