@@ -23,6 +23,8 @@ SCRIPTABLE OBJECT ASSETS:
     - Hut.asset, House.asset, Office.asset, Fact.asset (BuildingData)
   City Tiles (Assets/CityData/):
     - Road.asset, Residential.asset, Industrial.asset, Park.asset, EmptyLot.asset (CityTileData)
+    - RoadStart.asset, RoadEnd.asset, RoadFiller.asset, RoadIntersection.asset, RoadBranch.asset (CityTileData)
+    - EmptySpace.asset (CityTileData)
     - DefaultAdjacencyRules.asset (CityTileAdjacencyRule)
   Environment (Assets/EnvironmentData/):
     - Mountain.asset, Pond.asset, Tree.asset, Road.asset, RiverSegment.asset (EnvironmentData)
@@ -30,12 +32,14 @@ SCRIPTABLE OBJECT ASSETS:
 PREFABS (Assets/Prefabs/):
   Buildings: PH1-Hut, PH2-House, PH3-Office, PH4-Fact, ShopButton
   Environment: PH-Mountain, PH-Pond, PH-Tree, PH-Road, PH-RiverSegment
+  Roads: PH-RoadStart, PH-RoadEnd, PH-RoadFiller, PH-RoadIntersection, PH-RoadBranch
+  Empty Space: PH-EmptySpace
 
 RECOVERY:
   - Assets/_Recovery/0.unity — Scene backup.
 
 ================================================================================
-SCRIPTS (Assets/Scripts/) — 20 Scripts
+SCRIPTS (Assets/Scripts/) — 21 Scripts
 ================================================================================
 
 1. BuildingData.cs (ScriptableObject)
@@ -134,8 +138,15 @@ SCRIPTS (Assets/Scripts/) — 20 Scripts
     - AddPollution(int) updates counter; called by BuildingPlacer on placement.
     - UI text auto-anchored to top-center, color-coded: green (<0), yellow (0–49), red (>=50).
 
+21. MapGenerator.cs (MonoBehaviour)
+    - Modular map generator for Level_0. Replaces WFCCityGenerator functionally.
+    - 3-phase algorithm: road network generation, road tile classification, empty space fill.
+    - Road tiles permanently block cells; EmptySpace tiles leave cells free for building placement.
+    - Configurable: tile assignments (6 CityTileData slots), region bounds, road count/length, seed.
+    - Editor buttons via MapGeneratorEditor.cs (Generate Map / Clear Map).
+
 ================================================================================
-EDITOR SCRIPTS (Assets/Editor/) — 8 Scripts
+EDITOR SCRIPTS (Assets/Editor/) — 9 Scripts
 ================================================================================
 
 1. AddCityGeneratorToLevel.cs (EditorWindow)
@@ -179,6 +190,11 @@ EDITOR SCRIPTS (Assets/Editor/) — 8 Scripts
    - Custom Inspector for WFCCityGenerator.
    - Shows GridManager info (dimensions + cell size), "Generate City" (green) and
      "Clear City" (red) buttons. Registers undo/redo.
+
+9. MapGeneratorEditor.cs (CustomEditor)
+   - Custom Inspector for MapGenerator.
+   - Shows GridManager info, "Generate Map" (green) and "Clear Map" (red) buttons.
+     Registers undo/redo.
 
 ================================================================================
 CHANGE LOG
@@ -304,3 +320,39 @@ UPDATE 19 — Pollution System:
        Park: -90, Water: -85, Garden: -80, Recycle: -75, Farm: -60, Fountain: -50
        Hut: +50, Heritage: +55, House: +60, Market: +65, Hospital: +70, Office: +75,
        Gas: +95, Factory: +100
+
+UPDATE 20 — Road Placeholder Prefabs:
+   - generate_roads.py (new): Python script generating road placeholder assets outside Unity.
+     Follows the same pattern as generate_buildings.py but outputs CityTileData assets.
+   - Created 5 road piece types, each with material + prefab + CityTileData asset (30 files total):
+       RoadStart (green, 2.4x0.15x2.4) — starting point marker
+       RoadEnd (red, 2.4x0.15x2.4) — ending point marker
+       RoadFiller (gray, 2.4x0.1x4.8) — straight road segment (elongated)
+       RoadIntersection (yellow, 2.4x0.1x2.4) — 4-way crossing
+       RoadBranch (orange, 2.4x0.1x2.4) — T-junction / branching road
+   - All prefabs placed in Assets/Prefabs/Environment/, materials in Assets/Materials/,
+     CityTileData assets in Assets/CityData/.
+   - All road prefabs are flat cubes with Y offset 0.05 (sits on terrain), 1 cell size.
+   - Post-generation: add new CityTileData assets to DefaultAdjacencyRules in Unity Inspector.
+
+UPDATE 21 — EmptySpace Placeholder Prefab:
+   - generate_empty_space.py (new): Standalone Python script generating the EmptySpace placeholder.
+     Independent from the roads generator.
+   - EmptySpace (beige, 2.4x0.1x2.4) — buildable empty space where the player places buildings.
+   - Files: Mat_EmptySpace.mat (Assets/Materials/), PH-EmptySpace.prefab (Assets/Prefabs/),
+     EmptySpace.asset (Assets/CityData/).
+   - Flat cube, Y offset 0.05, 1 cell size, CityTileData asset.
+
+UPDATE 22 — MapGenerator (Level_0 Map Generation):
+   - CityGenerator disabled in Level_0 (m_IsActive: 0).
+   - MapGenerator.cs (new, MonoBehaviour): Modular 3-phase map generator:
+     Phase 1 — Road network via random walks from center, with configurable road count/length.
+     Phase 2 — Classify road cells by cardinal neighbors and instantiate correct tile type:
+       1 neighbor → RoadStart/RoadEnd, 2 opposite → RoadFiller (rotated),
+       3 neighbors → RoadBranch (T-junction, rotated), 4 → RoadIntersection.
+     Phase 3 — Fill remaining region cells with EmptySpace tiles.
+   - Roads call OccupyCellsPermanent (block building placement).
+   - EmptySpace tiles do NOT occupy cells (allow building placement).
+   - All tiles set to Ignore Raycast layer, parented under MapGenerator transform.
+   - Inspector: 6 CityTileData slots, region bounds, road params, seed, generateOnStart toggle.
+   - MapGeneratorEditor.cs (new): Custom Inspector with Generate Map / Clear Map buttons.

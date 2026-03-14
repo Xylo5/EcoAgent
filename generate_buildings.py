@@ -33,7 +33,7 @@ def make_guid():
     return uuid.uuid4().hex
 
 def make_file_id():
-    return random.randint(1000000000000000000, 9999999999999999999)
+    return random.randint(1000000000000000000, 9223372036854775807)
 
 # ── Material template ──────────────────────────────────────────────
 def make_material(name, r, g, b, mat_guid):
