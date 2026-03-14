@@ -11038,7 +11038,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingUI
   buildingPlacer: {fileID: 1349761822}
   buildings:
+  - {fileID: 11400000, guid: 6044ba98012d4714a488b8bec211183c, type: 2}
+  - {fileID: 11400000, guid: 7392c48d3f11490a9e57b3d768c93b7a, type: 2}
+  - {fileID: 11400000, guid: c109d3a489f94e29a18622af3deb1602, type: 2}
   - {fileID: 11400000, guid: ac0ca06473f949f4eb52cb5a4761bb40, type: 2}
+  - {fileID: 11400000, guid: 9218c6e6455940da9911c523ab20f988, type: 2}
+  - {fileID: 11400000, guid: def88d4447dc45adb2423a432e8f5c03, type: 2}
+  - {fileID: 11400000, guid: c5591df146bc4357aa0ca00c644839f0, type: 2}
+  - {fileID: 11400000, guid: d5bba0dbe4d144b59495082859babe91, type: 2}
+  - {fileID: 11400000, guid: 3462ea114caf440eba4cf8fcc8327ae8, type: 2}
+  - {fileID: 11400000, guid: 8445fd87f9114a9989c0fcdf60e30711, type: 2}
+  - {fileID: 11400000, guid: 5b4d30e608ea4898b313b512278ba9b4, type: 2}
   - {fileID: 11400000, guid: 933912a4595cf2043b14c2097babcab6, type: 2}
   - {fileID: 11400000, guid: 46b44028c809630469659e941749bdec, type: 2}
   - {fileID: 11400000, guid: 224661328b458fb4f8e04b658bd1775f, type: 2}

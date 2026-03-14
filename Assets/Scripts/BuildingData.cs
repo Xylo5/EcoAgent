@@ -13,7 +13,7 @@ public class BuildingData : ScriptableObject
     public Sprite icon; // UI icon for the building shop panel
 
     [Header("Grid Size (square, in cells)")]
-    [Range(1, 5)]
+    [Range(1, 15)]
     public int sizeInCells = 1; // 1 = 1x1, 2 = 2x2, 3 = 3x3, etc.
 
     [Header("Prefab")]
