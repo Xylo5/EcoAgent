@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Handles building placement with full keyboard controls (CoC-style).
@@ -71,6 +72,17 @@ public class BuildingPlacer : MonoBehaviour
 
         // Block Enter for 2 frames so the same keypress doesn't confirm
         confirmCooldown = 2;
+
+        // Fallback: auto-find camera if not assigned
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+
+        if (building.prefab == null)
+        {
+            Debug.LogError($"[BuildingPlacer] Cannot place '{building.buildingName}' — prefab is not assigned!");
+            state = PlacerState.Idle;
+            return;
+        }
 
         // Start ghost at grid center
         int centerX = (gridManager.gridWidth - building.sizeInCells) / 2;
@@ -157,9 +169,10 @@ public class BuildingPlacer : MonoBehaviour
         int size = currentBuildingData.sizeInCells;
         bool positionChanged = false;
 
-        // --- Mouse Movement ---
+        // --- Mouse Movement (skip if pointer is over UI) ---
         Vector2 currentMousePos = InputManager.Instance.GetMousePosition();
-        if ((currentMousePos - lastMousePos).sqrMagnitude > 2f) // If mouse moved
+        bool pointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        if (!pointerOverUI && (currentMousePos - lastMousePos).sqrMagnitude > 2f) // If mouse moved
         {
             lastMousePos = currentMousePos;
             Ray ray = mainCamera.ScreenPointToRay(currentMousePos);
@@ -240,9 +253,13 @@ public class BuildingPlacer : MonoBehaviour
 
     private void HandleConfirmCancel()
     {
-        // Enter = confirm (only after cooldown expires)
+        // Enter = confirm (only after cooldown expires, and not when clicking on UI)
         if (confirmCooldown <= 0 && InputManager.Instance.GetEnterDown())
         {
+            // Skip if the click landed on a UI element
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                return;
+
             if (canPlace)
             {
                 ConfirmPlacement();

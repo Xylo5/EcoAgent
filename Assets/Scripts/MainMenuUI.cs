@@ -22,7 +22,7 @@ public class MainMenuUI : MonoBehaviour
 
     void Update()
     {
-        if (InputManager.Instance.GetEnterDown())
+        if (InputManager.Instance.GetEnterKeyDown())
         {
             OnStartGame();
         }

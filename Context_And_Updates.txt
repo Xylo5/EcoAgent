@@ -1,23 +1,270 @@
 Eco Project - Context and Updates Summary
 
-CONTEXT:
+================================================================================
+CONTEXT
+================================================================================
 - Game: Eco, a 3D city builder (Clash of Clans style) in Unity (URP + new Input System).
 - Core Mechanics: 100x100 grid building placement (place, relocate, demolish), RTS camera.
 - Scenes: MainMenu, LevelSelect, Level_0 (Gameplay), MapGenerator (WFC/Grid Generator).
 - Assets: SimplePoly City low-poly pack.
 
-RECENT UPDATES (Grid & Map Generation):
-1. Cell Size Fixed:
-   - GridManager.cs updated to force a strict cell size of 2.5 units.
+================================================================================
+PROJECT STRUCTURE
+================================================================================
 
-2. Size Support Added to CityTiles:
-   - CityTileData.cs updated to include a 'sizeInCells' variable (1 to 10 scale).
+SCENES (Assets/Scenes/):
+  - MainMenu.unity        — Title screen with Start and Quit buttons.
+  - LevelSelect.unity     — Level selection with 5 buttons (only Level 1 enabled).
+  - Level_0.unity          — Main gameplay scene with grid, camera, building system.
+  - MapGenerator.unity     — WFC procedural city generation scene.
 
-3. Variable-Size Map Generator:
-   - WFCCityGenerator.cs completely rewritten.
-   - It is now a randomized grid placer that dynamically reads each prefab's 'sizeInCells'.
-   - Ensures larger SimplePoly prefabs (like 2x2 or 5x5 blocks) check the grid bounds and do not overlap.
+SCRIPTABLE OBJECT ASSETS:
+  Buildings (Assets/):
+    - Hut.asset, House.asset, Office.asset, Fact.asset (BuildingData)
+  City Tiles (Assets/CityData/):
+    - Road.asset, Residential.asset, Industrial.asset, Park.asset, EmptyLot.asset (CityTileData)
+    - DefaultAdjacencyRules.asset (CityTileAdjacencyRule)
+  Environment (Assets/EnvironmentData/):
+    - Mountain.asset, Pond.asset, Tree.asset, Road.asset, RiverSegment.asset (EnvironmentData)
 
-4. Automated Setup Tool Created:
-   - Added a new Editor script: Tools -> Apply SimplePoly Asset Prefabs.
-   - This tool automatically assigns the SimplePoly 3D models to the ScriptableObjects (Buildings, Environment, CityTiles) and accurately calculates their real-world 3D bounds to set the proper 'sizeInCells' on the 2.5 unit grid.
+PREFABS (Assets/Prefabs/):
+  Buildings: PH1-Hut, PH2-House, PH3-Office, PH4-Fact, ShopButton
+  Environment: PH-Mountain, PH-Pond, PH-Tree, PH-Road, PH-RiverSegment
+
+RECOVERY:
+  - Assets/_Recovery/0.unity — Scene backup.
+
+================================================================================
+SCRIPTS (Assets/Scripts/) — 19 Scripts
+================================================================================
+
+1. BuildingData.cs (ScriptableObject)
+   - Data container for building types.
+   - Fields: buildingName, icon, sizeInCells (1–5, square), prefab, validColor, invalidColor.
+
+2. BuildingPlacer.cs (MonoBehaviour)
+   - Core building placement system with 3 states: Idle, PlacingNew, MovingExisting.
+   - Dual input: arrow keys (0.3s initial delay, 0.1s repeat) + mouse terrain raycasting.
+   - Ghost building lifted 0.5 units; 2-frame Enter cooldown prevents instant confirm.
+   - Disables colliders on ghost during placement.
+
+3. BuildingUI.cs (MonoBehaviour)
+   - Two-level shop: fixed "Buildings" button (top-right, green, 140x45) + submenu panel.
+   - Button text shows "Name\n(SIZExSIZE)"; selected button scales to 1.15x.
+   - Controls: Tab/Shift+Tab to cycle, Enter to select, Escape to close submenu.
+   - Submenu auto-closes after placement.
+
+4. CameraController.cs (MonoBehaviour)
+   - RTS camera: WASD + middle-mouse pan (speed 40), Z/X + scroll zoom (range 5–300, speed 40),
+     Q/E + right-mouse rotate (speed 80). Start pitch 55°.
+   - Auto-finds terrain; pan limits = terrain bounds ± 20% margin.
+
+5. CityTileAdjacencyRule.cs (ScriptableObject)
+   - Defines WFC adjacency constraints. Maps each CityTileData to allowed cardinal neighbors.
+
+6. CityTileData.cs (ScriptableObject)
+   - City tile definition with sizeInCells (1–10) and prefabs[] array for random variants.
+   - GetRandomPrefab() picks a random variant.
+
+7. EnvironmentData.cs (ScriptableObject)
+   - Permanent environment object definition: objectName, sizeInCells (1–5), prefab.
+   - Permanently blocks grid cells; cannot be moved or demolished.
+
+8. EnvironmentObject.cs (MonoBehaviour)
+   - Runtime component tracking placed environment objects (gridCell, sizeInCells, environmentData).
+
+9. EnvironmentSpawner.cs (MonoBehaviour)
+   - Spawns configured EnvironmentPlacement list at scene start.
+   - Marks cells as permanent; validates area before placing. Names objects "Env_<name>".
+
+10. GridCellHighlighter.cs (MonoBehaviour)
+    - Visual feedback: green quads (available, 0/0.8/0/0.45) and red quads (occupied, 0.9/0/0/0.45).
+    - Object pool of max 25 quads; MaterialPropertyBlock for per-frame color. Quad Y offset 0.08.
+    - Respects ignoredBuilding for relocation.
+
+11. GridManager.cs (MonoBehaviour)
+    - Core 100x100 grid, fixed cellSize = 2.5 (forced in Awake).
+    - Dual tracking: occupiedCells (temporary) + permanentCells (immovable).
+    - Grid lines rendered with LineRenderer (green 0.2/1/0.3/0.5, width 0.06, Y offset 0.05).
+    - Key methods: IsCellAvailable, IsAreaAvailable (with ignore for relocation), OccupyCells,
+      FreeCells, OccupyCellsPermanent, WorldToGrid, GetCellWorldCenter, SnapToGrid.
+
+12. InputManager.cs (MonoBehaviour, Singleton)
+    - Centralized input using new Input System with per-frame device caching.
+    - Pan: WASD + middle-mouse (invertMousePan = true).
+    - Zoom: Z/X + scroll (mouseZoomSensitivity = 10).
+    - Rotate: Q/E + right-mouse (mouseRotateSensitivity = 0.5).
+    - Actions: Enter (keyboard + left-click), Escape, Tab/Shift+Tab, arrow keys (held + pressed).
+
+13. LevelHUD.cs (MonoBehaviour)
+    - In-game HUD with Back button. Escape key returns to level select.
+
+14. LevelSelectUI.cs (MonoBehaviour)
+    - Level selection screen with 5 buttons (only Level 1 enabled).
+    - Arrow keys/Tab to navigate, Enter to select, Escape to go back.
+    - Highlight colors for enabled/disabled/selected states.
+
+15. MainMenuUI.cs (MonoBehaviour)
+    - Main menu: Enter to start, Escape to quit.
+
+16. PlacedBuilding.cs (MonoBehaviour, requires BoxCollider)
+    - Runtime component for placed buildings with relocation support.
+    - PickUp(): frees cells, lifts 1.5 units, stores originalPosition/originalGridCell.
+    - PutDown(): re-occupies cells at new position.
+    - CancelMove(): returns to original position. Demolish(): frees cells + destroys.
+
+17. PlacementConfirmUI.cs (MonoBehaviour)
+    - Keyboard hints panel: "Arrow Keys: Move | Enter: Place | Esc: Cancel".
+    - Status: "✓ Valid Position" (green) or "✗ Blocked!" (red) with HTML color tags.
+    - Panel follows ghost building, 70px below screen position.
+
+18. SceneLoader.cs (static utility)
+    - Scene navigation: LoadMainMenu(), LoadLevelSelect(), LoadLevel(int).
+
+19. WFCCityGenerator.cs (MonoBehaviour)
+    - Randomized grid-based city generator (not true WFC — random placement with constraints).
+    - Reads each tile's sizeInCells; checks grid bounds and overlap before placing.
+    - maxAttempts = gridWidth * gridHeight * maxRetries (default 10).
+    - Seed support (0 = random). Generated tiles placed on "Ignore Raycast" layer.
+    - Marks cells permanent at runtime via GridManager.OccupyCellsPermanent().
+
+================================================================================
+EDITOR SCRIPTS (Assets/Editor/) — 8 Scripts
+================================================================================
+
+1. AddCityGeneratorToLevel.cs (EditorWindow)
+   - Menu: Tools > EcoAgent > Setup City Generator in Level_0.
+   - Opens Level_0, creates/finds WFCCityGenerator GO, wires GridManager + terrain +
+     DefaultAdjacencyRules, saves scene.
+
+2. AssignSimplePolyTextures.cs (EditorWindow)
+   - Menu: Tools > SimplePoly > Assign All Textures.
+   - Auto-matches SimplePoly material names to PNG textures; assigns _BaseMap and _MainTex.
+   - Handles naming variants (e.g. _color01 → _1).
+
+3. CityPlaceholderCreator.cs (EditorWindow)
+   - Menu: Tools > EcoAgent > Create City Tile Assets.
+   - Creates 5 CityTileData assets (Road, Residential, Industrial, Park, EmptyLot) and
+     DefaultAdjacencyRules with predefined adjacency rules for WFC generation.
+
+4. EnvironmentPlaceholderCreator.cs (EditorWindow)
+   - Menu: Tools > EcoAgent > Create Environment Placeholders.
+   - Generates 5 environment prefabs (Mountain, Tree, RiverSegment, Pond, Road) from Unity
+     primitives with colors, plus matching EnvironmentData ScriptableObjects.
+
+5. PrefabSizeMeasurer.cs (static utility)
+   - Menu: Tools > Measure SimplePoly Prefabs.
+   - Instantiates each SimplePoly prefab, calculates renderer bounds, logs dimensions and
+     estimated cell counts (based on 2.5 cell size) to console.
+
+6. SceneBuilderEditor.cs (EditorWindow)
+   - Menu: Tools > Build All Scenes.
+   - Full scene setup: creates MainMenu (title, start/quit buttons) and LevelSelect (5 level
+     buttons, grid layout, back button) scenes with TextMeshPro UI; adds LevelHUD to Level_0;
+     registers all scenes in Build Settings. Green/blue theme.
+
+7. SimplePolySetup.cs (EditorWindow)
+   - Menu: Tools > Apply SimplePoly Asset Prefabs.
+   - Batch-updates BuildingData (Hut, House, Office, Factory), EnvironmentData (Mountain, Pond,
+     Tree, Road, RiverSegment), and CityTileData assets with SimplePoly prefabs.
+   - Auto-calculates sizeInCells from real-world 3D bounds (CellSize = 2.5).
+
+8. WFCCityGeneratorEditor.cs (CustomEditor)
+   - Custom Inspector for WFCCityGenerator.
+   - Shows GridManager info (dimensions + cell size), "Generate City" (green) and
+     "Clear City" (red) buttons. Registers undo/redo.
+
+================================================================================
+CHANGE LOG
+================================================================================
+
+UPDATE 1 — Grid Cell Size Fixed:
+   - GridManager.cs updated to force a strict cell size of 2.5 units in Awake().
+
+UPDATE 2 — Size Support Added to CityTiles:
+   - CityTileData.cs updated to include sizeInCells (1–10) and prefab variants array.
+
+UPDATE 3 — Variable-Size Map Generator:
+   - WFCCityGenerator.cs completely rewritten as a randomized grid placer.
+   - Dynamically reads each prefab's sizeInCells; checks bounds and overlap.
+   - Larger tiles (2x2, 5x5, etc.) properly validated before placement.
+
+UPDATE 4 — Automated Setup Tool:
+   - SimplePolySetup.cs: Tools > Apply SimplePoly Asset Prefabs.
+   - Auto-assigns SimplePoly 3D models to ScriptableObjects and calculates sizeInCells
+     from real-world 3D bounds on the 2.5 unit grid.
+
+UPDATE 5 — Full Scene System:
+   - SceneBuilderEditor.cs: Tools > Build All Scenes.
+   - Created MainMenu, LevelSelect scenes with full TextMeshPro UI.
+   - Added LevelHUD to Level_0 with Back button.
+   - All scenes registered in Build Settings.
+
+UPDATE 6 — UI & Navigation Scripts:
+   - MainMenuUI.cs: Start/Quit with Enter/Escape keyboard support.
+   - LevelSelectUI.cs: 5 level buttons, arrow/tab navigation, highlight colors.
+   - LevelHUD.cs: In-game Back button + Escape key.
+   - SceneLoader.cs: Static scene navigation utility.
+
+UPDATE 7 — Building Placement System:
+   - BuildingPlacer.cs: 3-state system (Idle/PlacingNew/MovingExisting).
+   - Dual input: arrow keys with repeat + mouse terrain raycasting.
+   - Ghost building with lift, 2-frame cooldown, collider disabling.
+   - BuildingUI.cs: Two-level shop (fixed button + submenu). Tab/Enter/Escape controls.
+   - PlacementConfirmUI.cs: Keyboard hints panel following ghost with validity status.
+
+UPDATE 8 — Grid Cell Highlighting:
+   - GridCellHighlighter.cs: Green/red quad overlay per cell during placement.
+   - Object pooling (max 25 quads), MaterialPropertyBlock, relocation-aware.
+
+UPDATE 9 — Building Relocation & Demolition:
+   - PlacedBuilding.cs: PickUp/PutDown/CancelMove/Demolish flow.
+   - Stores original position for cancel; lifts 1.5 units when picked up.
+
+UPDATE 10 — Environment System:
+   - EnvironmentData.cs: Permanent obstacle definitions (sizeInCells 1–5).
+   - EnvironmentObject.cs: Runtime tracking component.
+   - EnvironmentSpawner.cs: Spawns environment placements at scene start; marks cells permanent.
+   - EnvironmentPlaceholderCreator.cs: Editor tool to generate placeholder prefabs + data assets.
+
+UPDATE 11 — RTS Camera & Input:
+   - CameraController.cs: WASD/mouse pan, Z/X/scroll zoom, Q/E/mouse rotate.
+   - InputManager.cs: Centralized singleton using new Input System with device caching.
+
+UPDATE 12 — City Generation Editor Tools:
+   - CityPlaceholderCreator.cs: Creates 5 CityTileData + adjacency rules.
+   - AddCityGeneratorToLevel.cs: Wires WFCCityGenerator into Level_0 scene.
+   - WFCCityGeneratorEditor.cs: Custom Inspector with Generate/Clear buttons.
+   - PrefabSizeMeasurer.cs: Logs SimplePoly prefab bounds to console.
+
+UPDATE 13 — Texture Assignment Tool:
+   - AssignSimplePolyTextures.cs: Tools > SimplePoly > Assign All Textures.
+   - Auto-matches material names to texture PNGs; assigns _BaseMap and _MainTex.
+
+UPDATE 14 — Data Architecture:
+   - BuildingData.cs: ScriptableObject for buildings (name, icon, size, prefab, colors).
+   - CityTileAdjacencyRule.cs: ScriptableObject mapping tiles to allowed cardinal neighbors.
+   - 4 building assets, 5 city tile assets, 5 environment assets, 1 adjacency rule asset.
+
+UPDATE 15 — Input & Null Reference Fixes:
+   - InputManager.cs: Added GetEnterKeyDown() — keyboard-only Enter check (no mouse click).
+     GetEnterDown() still includes left-click for gameplay; GetEnterKeyDown() is for UI menus.
+   - BuildingUI.cs: Changed Update() to use GetEnterKeyDown() instead of GetEnterDown().
+     Prevents left-click from conflicting with button EventTriggers (double-fire bug).
+   - LevelSelectUI.cs: Same fix — uses GetEnterKeyDown() for keyboard selection.
+   - BuildingPlacer.cs: Added Camera.main fallback if mainCamera is not assigned in Inspector.
+     Added null guard for building.prefab in StartPlacing() — logs error and aborts gracefully.
+
+UPDATE 16 — Input & Null Reference Fixes (Part 2):
+   - InputManager.cs: Changed Instance from auto-property to lazy-init singleton.
+     If no InputManager exists in the scene, one is auto-created via FindFirstObjectByType
+     or instantiated fresh. Fixes NullReferenceException when playing Level_0 directly
+     without going through MainMenu. Also initializes Keyboard/Mouse device refs in Awake()
+     so they're available on frame 0.
+   - BuildingPlacer.cs: Added EventSystem.IsPointerOverGameObject() guard in HandleConfirmCancel()
+     and HandleMovement(). Left-clicks on UI elements (buttons, panels) no longer trigger
+     building placement confirmation or ghost movement. Fixes building being placed when
+     clicking UI buttons during placement mode.
+   - MainMenuUI.cs: Changed Update() to use GetEnterKeyDown() instead of GetEnterDown().
+     Prevents left-click on Start button from double-firing scene load (once via onClick,
+     once via GetEnterDown).

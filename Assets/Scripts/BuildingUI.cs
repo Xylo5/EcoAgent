@@ -68,8 +68,8 @@ public class BuildingUI : MonoBehaviour
             UpdateButtonHighlight();
         }
 
-        // Enter = select the highlighted building
-        if (InputManager.Instance.GetEnterDown())
+        // Enter = select the highlighted building (keyboard only — mouse clicks handled by EventTrigger)
+        if (InputManager.Instance.GetEnterKeyDown())
         {
             if (buildings.Length > 0)
             {

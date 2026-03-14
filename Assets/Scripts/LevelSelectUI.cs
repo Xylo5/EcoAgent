@@ -77,8 +77,8 @@ public class LevelSelectUI : MonoBehaviour
 
         if (moved) UpdateHighlight();
 
-        // Select
-        if (InputManager.Instance.GetEnterDown())
+        // Select (keyboard only — button clicks handled by onClick listeners)
+        if (InputManager.Instance.GetEnterKeyDown())
         {
             if (selectedIndex < enabledLevelCount)
                 OnLevelSelected(selectedIndex);

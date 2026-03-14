@@ -7,7 +7,23 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class InputManager : MonoBehaviour
 {
-    public static InputManager Instance { get; private set; }
+    private static InputManager _instance;
+    public static InputManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = FindFirstObjectByType<InputManager>();
+                if (_instance == null)
+                {
+                    GameObject go = new GameObject("InputManager");
+                    _instance = go.AddComponent<InputManager>();
+                }
+            }
+            return _instance;
+        }
+    }
 
     [Header("Mouse Settings")]
     [Tooltip("Sensitivity multiplier for panning with holding middle mouse button.")]
@@ -25,14 +41,18 @@ public class InputManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
             return;
         }
-        Instance = this;
+        _instance = this;
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
+
+        // Initialize device refs immediately so they're available on frame 0
+        kb = Keyboard.current;
+        mouse = Mouse.current;
     }
 
     private void Update()
@@ -110,6 +130,15 @@ public class InputManager : MonoBehaviour
     {
         return (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
             || (mouse != null && mouse.leftButton.wasPressedThisFrame);
+    }
+
+    /// <summary>
+    /// Returns true if the Enter key was pressed this frame (keyboard only, no mouse click).
+    /// Use this in UI menus to avoid left-click conflicting with button EventTriggers.
+    /// </summary>
+    public bool GetEnterKeyDown()
+    {
+        return kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame);
     }
 
     public bool GetEnterHeld()
