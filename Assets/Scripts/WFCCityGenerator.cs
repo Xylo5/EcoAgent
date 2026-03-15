@@ -64,10 +64,8 @@ public class WFCCityGenerator : MonoBehaviour
         // cellSize may be 0 in edit mode (Awake hasn't run), fall back to 2.5.
         cellSize   = gridManager.cellSize > 0f ? gridManager.cellSize : 2.5f;
 
-        // Cache terrain origin so tiles align to the terrain, not this transform.
-        cachedTerrainOrigin = (gridManager.terrain != null)
-            ? gridManager.terrain.transform.position
-            : Vector3.zero;
+        // Cache grid origin so tiles align to the playable grid.
+        cachedTerrainOrigin = gridManager.GridOrigin;
 
         ClearCity();
 

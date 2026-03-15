@@ -72,10 +72,10 @@ public class EnvironmentSpawner : MonoBehaviour
     /// </summary>
     private Vector3 GetWorldPosition(Vector2Int cell, int size)
     {
-        Vector3 terrainPos = gridManager.terrain != null ? gridManager.terrain.transform.position : Vector3.zero;
-        float x = terrainPos.x + cell.x * gridManager.cellSize + (size * gridManager.cellSize) / 2f;
-        float z = terrainPos.z + cell.y * gridManager.cellSize + (size * gridManager.cellSize) / 2f;
-        float y = gridManager.terrain != null ? gridManager.terrain.SampleHeight(new Vector3(x, 0, z)) + terrainPos.y : terrainPos.y;
+        Vector3 origin = gridManager.GridOrigin;
+        float x = origin.x + cell.x * gridManager.cellSize + (size * gridManager.cellSize) / 2f;
+        float z = origin.z + cell.y * gridManager.cellSize + (size * gridManager.cellSize) / 2f;
+        float y = gridManager.terrain != null ? gridManager.terrain.SampleHeight(new Vector3(x, 0, z)) + gridManager.terrain.transform.position.y : origin.y;
         return new Vector3(x, y, z);
     }
 }
