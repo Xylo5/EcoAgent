@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5485833428853954950}
   - component: {fileID: 4070317914650866858}
   - component: {fileID: 7252128138955990433}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: PH-RoadEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.05, z: 0}
-  m_LocalScale: {x: 2.4, y: 0.15, z: 2.4}
+  m_LocalScale: {x: 0.26164803, y: 0.016353002, z: 0.26164803}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -41,7 +41,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3029514275492525698}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 7751357865401175629, guid: 25005c3d16a41364383a54ac22cbe837, type: 3}
 --- !u!23 &4070317914650866858
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b7dd8c0da37a40fa9529ddcb40640df4, type: 2}
+  - {fileID: 2100000, guid: 63ac02641efdf374788d7d14242bde68, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
