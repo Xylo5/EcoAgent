@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: RoadIntersection
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: RoadIntersection
-  sizeInCells: 1
+  sizeInCells: 2
   prefabs:
-  - {fileID: 8828453338286081481, guid: b3f33559cb804d858bc35c9db1004120, type: 3}
+  - {fileID: 1468049575223305406, guid: 164f347e815ae624cb5ad7ac89404747, type: 3}

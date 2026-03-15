@@ -2,8 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// Spawns a dense forest of trees in the terrain border area around the playable grid.
-/// The border is defined by GridManager.borderCells — the ring of cells between
-/// the terrain edge and the playable grid. Trees are non-interactable (decorative only).
+/// Auto-detects the border by comparing terrain size to grid size.
+/// Trees are non-interactable (decorative only).
 /// </summary>
 public class BorderForestSpawner : MonoBehaviour
 {
@@ -50,10 +50,29 @@ public class BorderForestSpawner : MonoBehaviour
             return;
         }
 
-        int border = gridManager.borderCells;
-        if (border <= 0)
+        Terrain terrain = gridManager.terrain;
+        if (terrain == null || terrain.terrainData == null)
         {
-            Debug.LogWarning("[BorderForestSpawner] borderCells is 0 — nothing to fill.");
+            Debug.LogError("[BorderForestSpawner] No terrain found on GridManager!");
+            return;
+        }
+
+        float cellSize = gridManager.cellSize;
+        int gridW = gridManager.gridWidth;
+        int gridH = gridManager.gridHeight;
+
+        // Auto-detect border from terrain vs grid size
+        float terrainSizeX = terrain.terrainData.size.x;
+        float terrainSizeZ = terrain.terrainData.size.z;
+        float gridSizeX = gridW * cellSize;
+        float gridSizeZ = gridH * cellSize;
+
+        int borderX = Mathf.Max(0, Mathf.FloorToInt((terrainSizeX - gridSizeX) / (2f * cellSize)));
+        int borderZ = Mathf.Max(0, Mathf.FloorToInt((terrainSizeZ - gridSizeZ) / (2f * cellSize)));
+
+        if (borderX <= 0 && borderZ <= 0)
+        {
+            Debug.LogWarning("[BorderForestSpawner] Terrain is same size as grid — no border to fill. Resize terrain to be larger than the grid.");
             return;
         }
 
@@ -62,17 +81,11 @@ public class BorderForestSpawner : MonoBehaviour
         int seed = (randomSeed != 0) ? randomSeed : System.Environment.TickCount;
         Random.InitState(seed);
 
-        float cellSize = gridManager.cellSize;
-        int gridW = gridManager.gridWidth;
-        int gridH = gridManager.gridHeight;
+        Vector3 terrainOrigin = terrain.transform.position;
+        Vector3 gridOrigin = gridManager.GridOrigin;
 
-        // Total terrain size in cells (grid + border on each side)
-        int totalW = gridW + border * 2;
-        int totalH = gridH + border * 2;
-
-        Vector3 terrainOrigin = gridManager.terrain != null
-            ? gridManager.terrain.transform.position
-            : Vector3.zero;
+        int totalW = gridW + borderX * 2;
+        int totalH = gridH + borderZ * 2;
 
         int treeCount = 0;
         GameObject parent = new GameObject("BorderForest");
@@ -83,29 +96,26 @@ public class BorderForestSpawner : MonoBehaviour
             for (int tz = 0; tz < totalH; tz++)
             {
                 // Skip cells inside the playable grid
-                bool insideGrid = tx >= border && tx < border + gridW &&
-                                  tz >= border && tz < border + gridH;
+                bool insideGrid = tx >= borderX && tx < borderX + gridW &&
+                                  tz >= borderZ && tz < borderZ + gridH;
                 if (insideGrid) continue;
 
-                // Spawn multiple trees per cell for density
                 int count = Mathf.Max(1, Mathf.RoundToInt(treesPerCell));
                 for (int t = 0; t < count; t++)
                 {
                     float jitterX = Random.Range(-0.5f, 0.5f) * positionJitter * cellSize;
                     float jitterZ = Random.Range(-0.5f, 0.5f) * positionJitter * cellSize;
 
-                    // Extra fractional chance for non-integer treesPerCell
                     if (t == count - 1 && treesPerCell % 1f > 0f)
                     {
                         if (Random.value > (treesPerCell % 1f))
                             continue;
                     }
 
+                    // Position relative to terrain origin (not grid origin) since border covers the whole terrain
                     float worldX = terrainOrigin.x + (tx + 0.5f) * cellSize + jitterX;
                     float worldZ = terrainOrigin.z + (tz + 0.5f) * cellSize + jitterZ;
-                    float worldY = terrainOrigin.y;
-                    if (gridManager.terrain != null)
-                        worldY = gridManager.terrain.SampleHeight(new Vector3(worldX, 0, worldZ)) + terrainOrigin.y;
+                    float worldY = terrain.SampleHeight(new Vector3(worldX, 0, worldZ)) + terrainOrigin.y;
 
                     Vector3 pos = new Vector3(worldX, worldY, worldZ);
 
@@ -142,7 +152,7 @@ public class BorderForestSpawner : MonoBehaviour
             }
         }
 
-        Debug.Log($"[BorderForestSpawner] Spawned {treeCount} trees in border area (seed {seed}).");
+        Debug.Log($"[BorderForestSpawner] Spawned {treeCount} trees in border (borderX={borderX}, borderZ={borderZ}, seed={seed}).");
     }
 
     public void ClearForest()

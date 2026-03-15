@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: RoadBranch
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: RoadBranch
-  sizeInCells: 1
+  sizeInCells: 2
   prefabs:
-  - {fileID: 7905318472464691407, guid: 14a37dc4c9da44bdbe7bf4d87790d28b, type: 3}
+  - {fileID: 8372441777440522206, guid: 80d39cd4b0fa2f74c8d935a15402c70a, type: 3}

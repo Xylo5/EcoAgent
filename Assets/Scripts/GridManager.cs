@@ -35,6 +35,33 @@ public class GridManager : MonoBehaviour
     // Cached terrain origin — terrain is static, so safe to cache
     private Vector3 terrainOrigin;
 
+    /// <summary>
+    /// World-space origin of the playable grid (bottom-left corner).
+    /// Centered on the terrain when terrain is larger than the grid.
+    /// Computed on access so it works in both edit and play mode.
+    /// </summary>
+    public Vector3 GridOrigin
+    {
+        get
+        {
+            Terrain t = terrain;
+            // In edit mode terrain may not be auto-found yet; try to locate it.
+            if (t == null)
+                t = FindAnyObjectByType<Terrain>();
+            if (t == null)
+                return Vector3.zero;
+
+            Vector3 tPos = t.transform.position;
+            if (t.terrainData == null)
+                return tPos;
+
+            float cs = cellSize > 0f ? cellSize : 2.5f;
+            float offsetX = (t.terrainData.size.x - gridWidth * cs) * 0.5f;
+            float offsetZ = (t.terrainData.size.z - gridHeight * cs) * 0.5f;
+            return tPos + new Vector3(offsetX, 0f, offsetZ);
+        }
+    }
+
     void Awake()
     {
         // Auto-find terrain if not assigned in Inspector
@@ -87,16 +114,16 @@ public class GridManager : MonoBehaviour
         // Vertical lines (along Z axis)
         for (int x = 0; x <= gridWidth; x++)
         {
-            Vector3 start = terrainOrigin + new Vector3(x * cellSize, yOffset, 0);
-            Vector3 end = terrainOrigin + new Vector3(x * cellSize, yOffset, gridHeight * cellSize);
+            Vector3 start = GridOrigin + new Vector3(x * cellSize, yOffset, 0);
+            Vector3 end = GridOrigin + new Vector3(x * cellSize, yOffset, gridHeight * cellSize);
             CreateLine($"GridLine_V_{x}", start, end, lineMat, lineWidth);
         }
 
         // Horizontal lines (along X axis)
         for (int z = 0; z <= gridHeight; z++)
         {
-            Vector3 start = terrainOrigin + new Vector3(0, yOffset, z * cellSize);
-            Vector3 end = terrainOrigin + new Vector3(gridWidth * cellSize, yOffset, z * cellSize);
+            Vector3 start = GridOrigin + new Vector3(0, yOffset, z * cellSize);
+            Vector3 end = GridOrigin + new Vector3(gridWidth * cellSize, yOffset, z * cellSize);
             CreateLine($"GridLine_H_{z}", start, end, lineMat, lineWidth);
         }
 
@@ -127,8 +154,8 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector3 GetCellWorldCenter(Vector2Int cell)
     {
-        float x = terrainOrigin.x + cell.x * cellSize + cellSize / 2f;
-        float z = terrainOrigin.z + cell.y * cellSize + cellSize / 2f;
+        float x = GridOrigin.x + cell.x * cellSize + cellSize / 2f;
+        float z = GridOrigin.z + cell.y * cellSize + cellSize / 2f;
         float y = terrain != null ? terrain.SampleHeight(new Vector3(x, 0, z)) + terrainOrigin.y : terrainOrigin.y;
         return new Vector3(x, y, z);
     }
@@ -139,8 +166,8 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector3 SnapToGrid(Vector3 worldPosition, int buildingSize = 1)
     {
-        float localX = worldPosition.x - terrainOrigin.x;
-        float localZ = worldPosition.z - terrainOrigin.z;
+        float localX = worldPosition.x - GridOrigin.x;
+        float localZ = worldPosition.z - GridOrigin.z;
 
         int cellX = Mathf.FloorToInt(localX / cellSize);
         int cellZ = Mathf.FloorToInt(localZ / cellSize);
@@ -148,8 +175,8 @@ public class GridManager : MonoBehaviour
         cellX = Mathf.Clamp(cellX, 0, gridWidth - buildingSize);
         cellZ = Mathf.Clamp(cellZ, 0, gridHeight - buildingSize);
 
-        float snappedX = terrainOrigin.x + cellX * cellSize + (buildingSize * cellSize) / 2f;
-        float snappedZ = terrainOrigin.z + cellZ * cellSize + (buildingSize * cellSize) / 2f;
+        float snappedX = GridOrigin.x + cellX * cellSize + (buildingSize * cellSize) / 2f;
+        float snappedZ = GridOrigin.z + cellZ * cellSize + (buildingSize * cellSize) / 2f;
         float snappedY = terrain != null ? terrain.SampleHeight(new Vector3(snappedX, 0, snappedZ)) + terrainOrigin.y : terrainOrigin.y;
 
         return new Vector3(snappedX, snappedY, snappedZ);
@@ -160,8 +187,8 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector2Int WorldToGrid(Vector3 worldPosition)
     {
-        int cellX = Mathf.FloorToInt((worldPosition.x - terrainOrigin.x) / cellSize);
-        int cellZ = Mathf.FloorToInt((worldPosition.z - terrainOrigin.z) / cellSize);
+        int cellX = Mathf.FloorToInt((worldPosition.x - GridOrigin.x) / cellSize);
+        int cellZ = Mathf.FloorToInt((worldPosition.z - GridOrigin.z) / cellSize);
         cellX = Mathf.Clamp(cellX, 0, gridWidth - 1);
         cellZ = Mathf.Clamp(cellZ, 0, gridHeight - 1);
         return new Vector2Int(cellX, cellZ);
@@ -174,8 +201,8 @@ public class GridManager : MonoBehaviour
     {
         float bottomLeftX = buildingCenter.x - (buildingSize * cellSize) / 2f;
         float bottomLeftZ = buildingCenter.z - (buildingSize * cellSize) / 2f;
-        int cellX = Mathf.RoundToInt((bottomLeftX - terrainOrigin.x) / cellSize);
-        int cellZ = Mathf.RoundToInt((bottomLeftZ - terrainOrigin.z) / cellSize);
+        int cellX = Mathf.RoundToInt((bottomLeftX - GridOrigin.x) / cellSize);
+        int cellZ = Mathf.RoundToInt((bottomLeftZ - GridOrigin.z) / cellSize);
         cellX = Mathf.Clamp(cellX, 0, gridWidth - buildingSize);
         cellZ = Mathf.Clamp(cellZ, 0, gridHeight - buildingSize);
         return new Vector2Int(cellX, cellZ);

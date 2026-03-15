@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: RoadEnd
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: RoadEnd
-  sizeInCells: 1
+  sizeInCells: 2
   prefabs:
-  - {fileID: 3029514275492525698, guid: dec3a21f4de04c5393f04813a2ab5eb0, type: 3}
+  - {fileID: 1284389121047047001, guid: eba9ce208b8fc6a469b43cecf4406b2a, type: 3}

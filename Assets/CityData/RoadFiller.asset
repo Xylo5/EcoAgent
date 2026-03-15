@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21fd0c39dee4aa14499ff0b1d1172088, type: 3}
   m_Name: RoadFiller
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
-  tileName: RoadFiller
-  sizeInCells: 1
+  tileName: RoadFiller1
+  sizeInCells: 2
   prefabs:
-  - {fileID: 5783880706992540165, guid: 90d01e761ee941ef8e301799536cd42c, type: 3}
+  - {fileID: 169479236523521599, guid: ff2ee7ab73ae6894792e29db33ecadc3, type: 3}

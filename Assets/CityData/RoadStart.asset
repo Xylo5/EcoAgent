@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: RoadStart
   m_EditorClassIdentifier: Assembly-CSharp::CityTileData
   tileName: RoadStart
-  sizeInCells: 1
+  sizeInCells: 2
   prefabs:
-  - {fileID: 1857646420872667513, guid: 7dc5e528810b47a992d03a62875fa49d, type: 3}
+  - {fileID: 704010986106966374, guid: eeb8318d3ffadc641a8b3b4933a0c42f, type: 3}

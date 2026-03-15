@@ -1,0 +1,218 @@
+================================================================================
+ECO PROJECT — FULL CONTEXT
+================================================================================
+
+PROJECT OVERVIEW
+Unity 6000.3.8f1 city builder game ("Eco") with URP.
+Player places buildings on a grid overlaid on terrain.
+Main scene: Assets/Scenes/Level_0.unity
+
+================================================================================
+ACTIVE SCRIPTS (Assets/Scripts/)
+================================================================================
+GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid
+RoadGenerator.cs        — Procedural road network with 9 tile types
+BuildingPlacer.cs       — Mouse-based building placement on grid
+BorderForestSpawner.cs  — Decorative trees around grid border
+EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
+CityTileData.cs         — ScriptableObject: tileName, sizeInCells, prefabs[]
+BuildingData.cs         — ScriptableObject for building definitions
+CameraController.cs     — Camera movement
+PlacedBuilding.cs       — Tracks placed building state
+PollutionManager.cs     — Pollution system
+BuildingUI.cs           — Building selection UI
+LevelHUD.cs             — In-game HUD
+MainMenuUI.cs           — Main menu
+PlacementConfirmUI.cs   — Confirm/cancel building placement
+LevelSelectUI.cs        — Level selection screen
+InputManager.cs         — Input handling
+GridCellHighlighter.cs  — Highlights grid cells
+SceneLoader.cs          — Scene loading utility
+EnvironmentData.cs      — ScriptableObject for environment objects
+EnvironmentObject.cs    — Environment object component
+
+EDITOR SCRIPTS (Assets/Editor/)
+RoadGeneratorEditor.cs  — Generate/Clear/Log Prefab Scales buttons
+
+UNUSED SCRIPTS (Assets/Not Being Used/)
+WFCCityGenerator.cs, CityTileAdjacencyRule.cs
+Editor: WFCCityGeneratorEditor, AddCityGeneratorToLevel, CityPlaceholderCreator
+
+================================================================================
+TERRAIN
+================================================================================
+Position: (-50, 0, -50)
+Size: 350 x 350 world units
+
+================================================================================
+GRID SYSTEM (GridManager.cs)
+================================================================================
+Grid: 100x100 cells
+Cell size: 2.5 (forced in Awake(), may be 0 in edit mode)
+Grid world extent: (0, 0, 0) to (250, 0, 250)
+
+GridOrigin Calculation:
+  offsetX = (terrainData.size.x - gridWidth * cellSize) * 0.5 = (350-250)*0.5 = 50
+  offsetZ = (terrainData.size.z - gridHeight * cellSize) * 0.5 = (350-250)*0.5 = 50
+  GridOrigin = terrainPos + (offsetX, 0, offsetZ) = (-50+50, 0, -50+50) = (0, 0, 0)
+
+GridOrigin property has edit-mode fallback: uses cellSize 2.5 if serialized is 0.
+Auto-finds Terrain in edit mode if not assigned.
+
+Cell Occupancy:
+  occupiedCells[,]  — buildings, temporary. Freed by FreeCells()
+  permanentCells[,] — roads, environment. Never freed by FreeCells()
+  Both arrays initialized in Awake() — NULL in edit mode
+  OccupyCellsPermanent() must only be called at runtime (guard with Application.isPlaying)
+
+Edit Mode Gotchas:
+  cellSize is 0 until Awake runs -> always use fallback: cellSize > 0 ? cellSize : 2.5f
+  terrain field may be null if not Inspector-assigned -> use Terrain.activeTerrain fallback
+  occupiedCells/permanentCells are null -> skip OccupyCellsPermanent calls
+  GridOrigin property handles all these internally with fallbacks
+
+Key Methods:
+  GetCellWorldCenter(cell)          — Single cell center in world space
+  SnapToGrid(worldPos, size)        — Snap world pos to nearest cell
+  WorldToGrid(worldPos)             — World -> grid cell
+  IsAreaAvailable(cell, size)       — Check if cells are free
+  OccupyCells(cell, size)           — Mark cells occupied (temporary)
+  FreeCells(cell, size)             — Free cells (skips permanent)
+  OccupyCellsPermanent(cell, size)  — Mark cells permanent (roads/env)
+  IsCellPermanent(cell)             — Check if permanently blocked
+
+World Position Formula (used by BuildingPlacer, RoadGenerator):
+  x = GridOrigin.x + cell.x * cellSize + (size * cellSize) / 2
+  z = GridOrigin.z + cell.y * cellSize + (size * cellSize) / 2
+  y = terrain.SampleHeight(x, z) + terrain.position.y
+
+================================================================================
+BORDER FOREST (BorderForestSpawner.cs)
+================================================================================
+Spawns decorative trees in the terrain area OUTSIDE the playable grid.
+Border width: (terrainSize - gridSize) / (2 * cellSize) = (350-250)/(2*2.5) = 20 cells
+Trees are placed in 20-cell-wide strips on all 4 sides.
+Trees skip cells inside the grid area.
+Road borderMargin of 2 cells keeps roads 1 block from grid edge.
+
+Coordinate Map:
+  Terrain: (-50,0,-50) to (300,0,300)
+    |  20-cell tree border on all sides  |
+    |  Grid: (0,0,0) to (250,0,250)     |
+    |    Road area: cell(2,2)-(97,97)    |
+    |    with borderMargin=2             |
+
+================================================================================
+ROAD GENERATION SYSTEM (RoadGenerator.cs)
+================================================================================
+Generates straight-line road network creating city blocks.
+Attached to a GameObject in the scene with GridManager reference.
+
+INSPECTOR FIELDS:
+  gridManager         GridManager    required    Reference to grid system
+  roadStart           CityTileData   required    Dead-end start tile
+  roadEnd             CityTileData   required    Dead-end end tile
+  roadFiller1-5       CityTileData   required    Straight road segments
+  roadIntersection    CityTileData   required    4-way crossing
+  roadBranch          CityTileData   required    T-junction / corners
+  emptySpace          CityTileData   required    Non-blocking fill tile
+  horizontalRoads     int            5           Range 3-12
+  verticalRoads       int            5           Range 3-12
+  roadJitter          int            1           Range 0-2, subtle block size variation
+  borderMargin        int            2           Cells from grid edge (1 block = 2 cells)
+  randomSeed          int            0           0 = random each run
+  generateOnStart     bool           true        Auto-generate on Play
+  fillEmptySpace      bool           true        Fill non-road areas
+  debugYOffset        float          0.15        Extra Y above terrain
+  lastComputedScale   float          readonly    Shows uniform scale applied to all tiles
+
+GENERATION FLOW:
+  1. CacheGridSettings() — reads gridWidth, gridHeight, cellSize from GridManager
+  2. ClearMap() — destroys all children
+  3. InitGrids() — creates roadMap and placedMap bool arrays
+  4. GenerateRoadNetwork() — paints straight horizontal/vertical roads on roadMap
+  5. ComputeReferenceScale() — measures filler1 bounds, computes uniform scale for all tiles
+  6. InstantiateRoadTiles() — classifies 2x2 blocks by neighbor count, picks tile + rotation
+  7. FillEmptySpace() — fills non-road cells with emptySpace (no grid blocking)
+
+ROAD CLASSIFICATION (by neighbor count):
+  0 neighbors -> roadStart, rotation 0
+  1 neighbor  -> roadStart (near edge) or roadEnd
+                 Rotation: hasN=270, hasE=0, hasS=90, hasW=180
+  2 straight  -> random filler, rotation: E-W=90, N-S=0
+  2 corner    -> roadBranch: N+E=0, E+S=90, S+W=180, N+W=270
+  3 neighbors -> roadBranch (T-junction): !S=0, !W=90, !N=180, !E=270
+  4 neighbors -> roadIntersection, rotation 0
+
+TILE INSTANTIATION (InstantiateTile):
+  1. Always uses Instantiate() (never PrefabUtility) so children can be modified
+  2. Computes world position via GetWorldPosition() (GridOrigin + cell offset + terrain height)
+  3. Applies uniform referenceScale (from filler1) to all tiles
+  4. Bounds-based centering: computes Renderer.bounds center offset, shifts root position
+  5. Sets layer to "Ignore Raycast"
+  6. Calls OccupyCellsPermanent() for road tiles at runtime only
+
+SCALING SYSTEM:
+  ComputeReferenceScale() instantiates filler1 temporarily, measures its Renderer.bounds
+  Computes: referenceScale = (2 * cellSize) / maxBoundsSize
+  This same scale is applied to ALL road tile types (uniform appearance)
+  LogPrefabScales() logs each prefab's native size + computed scale to Console
+
+FILLER WEIGHTING:
+  Filler1: weight 3 (~33%)
+  Filler2: weight 3 (~33%)
+  Filler3-5: weight 1 each (~11%)
+
+ROAD NETWORK LAYOUT:
+  Roads are evenly spaced within the border margin
+  Slight random jitter (+-roadJitter blocks) for natural block variation
+  ~15% chance inner roads get trimmed (end early) from one side
+  First/last roads always span full region
+  roadStart tiles biased to IsNearEdge (borderMargin + 6 cells from edge)
+
+WORLD POSITION (GetWorldPosition):
+  x = GridOrigin.x + cell.x * cellSize + (size * cellSize) * 0.5
+  z = GridOrigin.z + cell.y * cellSize + (size * cellSize) * 0.5
+  y = max(terrain height at 5 sample points) + terrain.position.y + debugYOffset
+  5-point sampling: center + 4 corners (prevents terrain clipping on slopes)
+  Falls back to Terrain.activeTerrain if gridManager.terrain is null (edit mode)
+  Matches BuildingPlacer.GridCellToWorldPos formula exactly
+
+================================================================================
+ROAD PREFAB DETAILS
+================================================================================
+Prefab folder: Assets/Prefabs/Roads with Grass/
+9 prefabs: Road Prefab 1-5 (fillers), Road Start Prefab, Road End Prefab,
+           Road Intersection, Road Branch
+
+IMPORTANT PREFAB QUIRKS:
+  - Children have baked scene-space local positions (e.g., road mesh at localPos 227, 0, 289)
+  - Grass sub-mesh layers sit at local (0,0,0) but have mesh vertices at scene-space coords
+  - Both types produce identical world-space Renderer.bounds
+  - Bounds-based centering works for both types: offset = (bounds.center - targetPos) * scale
+  - DO NOT use child position averaging — fails due to mixed coordinate types
+  - DO NOT use PrefabUtility.InstantiatePrefab — prevents child modification
+  - Road Intersection mesh scaled to 0.74 natively
+  - Road Branch is a PrefabInstance variant
+
+CITYTILEDATA ASSETS (Assets/CityData/):
+All road assets have sizeInCells: 2
+  roadStart       -> RoadStart_Grass.asset       -> Road Start Prefab
+  roadEnd         -> RoadEnd_Grass.asset          -> Road End Prefab
+  roadFiller1     -> RoadFiller1.asset            -> Road Prefab 1
+  roadFiller2     -> RoadFiller2.asset            -> Road Prefab 2
+  roadFiller3     -> RoadFiller3.asset            -> Road Prefab 3
+  roadFiller4     -> RoadFiller4.asset            -> Road Prefab 4
+  roadFiller5     -> RoadFiller5.asset            -> Road Prefab 5
+  roadIntersection-> RoadIntersection_Grass.asset -> Road Intersection
+  roadBranch      -> RoadBranch_Grass.asset       -> Road Branch
+  emptySpace      -> EmptySpace.asset             -> EmptySpace (sizeInCells: 1)
+
+================================================================================
+EDITOR: RoadGeneratorEditor.cs (Assets/Editor/)
+================================================================================
+Custom Inspector with 3 buttons:
+  Generate Roads (green)     — calls Generate()
+  Clear Roads (red)          — calls ClearMap()
+  Log Prefab Scales (blue)   — calls LogPrefabScales()
+Shows grid info box when GridManager is assigned.
