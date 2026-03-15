@@ -388,7 +388,9 @@ public class MapGenerator : MonoBehaviour
         gridWidth = gridManager.gridWidth;
         gridHeight = gridManager.gridHeight;
         cellSize = gridManager.cellSize > 0f ? gridManager.cellSize : 2.5f;
-        terrainOrigin = gridManager.GridOrigin;
+        terrainOrigin = (gridManager.terrain != null)
+            ? gridManager.terrain.transform.position
+            : Vector3.zero;
     }
 
     private bool InRegion(Vector2Int cell)
