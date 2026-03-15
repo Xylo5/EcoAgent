@@ -19,6 +19,11 @@ public class BuildingData : ScriptableObject
     [Header("Prefab")]
     public GameObject prefab; // The 3D model prefab to instantiate
 
+    [Header("Scale")]
+    [Tooltip("Extra scale multiplier after auto-fitting to grid. >1 = cartoon overfill, 1 = exact fit.")]
+    [Range(0.5f, 2f)]
+    public float scaleMultiplier = 1.1f;
+
     [Header("Placement Colors")]
     public Color validColor = new Color(0f, 1f, 0f, 0.5f);   // Green
     public Color invalidColor = new Color(1f, 0f, 0f, 0.5f);  // Red

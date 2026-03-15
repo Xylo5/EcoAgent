@@ -67,8 +67,8 @@ public class CameraController : MonoBehaviour
         float startHeight = Mathf.Max(terrainWidth, terrainLength) * 0.5f;
 
         float offsetZ = startHeight / Mathf.Tan(startPitch * Mathf.Deg2Rad);
-        transform.position = new Vector3(centerX, startHeight, centerZ - offsetZ);
-        transform.rotation = Quaternion.Euler(startPitch, 0f, 0f);
+        transform.position = new Vector3(centerX, startHeight, centerZ + offsetZ);
+        transform.rotation = Quaternion.Euler(startPitch, 180f, 0f);
     }
 
     void Update()

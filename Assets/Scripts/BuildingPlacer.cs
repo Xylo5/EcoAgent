@@ -115,6 +115,7 @@ public class BuildingPlacer : MonoBehaviour
         ghostObject = Instantiate(building.prefab, worldPos, Quaternion.identity);
         ghostObject.name = "Ghost_" + building.buildingName;
 
+        AutoScaleToGrid(ghostObject, building);
         UpdatePlacementMetricsFromGhost();
 
         // Recompute with measured footprint in case prefab is larger than data size.
@@ -339,6 +340,8 @@ public class BuildingPlacer : MonoBehaviour
         building.layer = LayerMaskToLayer(buildingLayer);
         SetLayerRecursive(building, building.layer);
 
+        AutoScaleToGrid(building, currentBuildingData);
+
         PlacedBuilding pb = building.AddComponent<PlacedBuilding>();
         pb.gridCell = ghostGridCell;
         pb.sizeInCells = size;
@@ -416,28 +419,18 @@ public class BuildingPlacer : MonoBehaviour
 
     private void UpdatePlacementMetricsFromGhost()
     {
-        if (ghostObject == null)
-        {
-            currentPlacementSize = Mathf.Max(1, currentBuildingData != null ? currentBuildingData.sizeInCells : 1);
-            currentVisualOffset = Vector3.zero;
-            return;
-        }
+        // sizeInCells is authoritative since AutoScaleToGrid fits the prefab to it
+        currentPlacementSize = Mathf.Max(1, currentBuildingData != null ? currentBuildingData.sizeInCells : 1);
+        currentVisualOffset = Vector3.zero;
+
+        if (ghostObject == null) return;
 
         Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>(true);
-        if (renderers == null || renderers.Length == 0)
-        {
-            currentPlacementSize = Mathf.Max(1, currentBuildingData != null ? currentBuildingData.sizeInCells : 1);
-            currentVisualOffset = Vector3.zero;
-            return;
-        }
+        if (renderers == null || renderers.Length == 0) return;
 
         Bounds bounds = renderers[0].bounds;
         for (int i = 1; i < renderers.Length; i++)
             bounds.Encapsulate(renderers[i].bounds);
-
-        float maxSize = Mathf.Max(bounds.size.x, bounds.size.z);
-        int measuredSize = Mathf.Max(1, Mathf.CeilToInt(maxSize / gridManager.cellSize));
-        currentPlacementSize = Mathf.Max(currentPlacementSize, measuredSize);
 
         // Center X/Z on the grid cell, bottom-align Y so the model sits on the ground.
         currentVisualOffset = new Vector3(
@@ -445,6 +438,29 @@ public class BuildingPlacer : MonoBehaviour
             ghostObject.transform.position.y - bounds.min.y,
             ghostObject.transform.position.z - bounds.center.z
         );
+    }
+
+    private void AutoScaleToGrid(GameObject obj, BuildingData data)
+    {
+        if (obj == null || data == null) return;
+
+        // Reset to prefab's default scale first
+        obj.transform.localScale = Vector3.one;
+
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>(true);
+        if (renderers == null || renderers.Length == 0) return;
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        float maxModelSize = Mathf.Max(bounds.size.x, bounds.size.z);
+        if (maxModelSize < 0.001f) return;
+
+        float targetSize = data.sizeInCells * gridManager.cellSize;
+        float scale = (targetSize / maxModelSize) * data.scaleMultiplier;
+
+        obj.transform.localScale = Vector3.one * scale;
     }
 
     private void SetBuildingVisible(GameObject obj, bool visible)

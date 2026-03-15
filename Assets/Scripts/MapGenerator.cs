@@ -34,12 +34,18 @@ public class MapGenerator : MonoBehaviour
     [Tooltip("Number of vertical roads spanning the map.")]
     [Range(2, 15)]
     public int verticalRoads = 6;
-    [Tooltip("Chance (0-1) a road drifts sideways each step, creating gentle curves.")]
-    [Range(0f, 0.3f)]
-    public float wanderChance = 0.08f;
+    [Tooltip("Perlin noise scale controlling road curvature. Lower = smoother, wider curves.")]
+    [Range(0.005f, 0.1f)]
+    public float curveScale = 0.03f;
+    [Tooltip("Maximum sideways drift amplitude in cells.")]
+    [Range(1f, 15f)]
+    public float curveAmplitude = 6f;
     [Tooltip("Number of extra short connector roads between main roads.")]
     [Range(0, 20)]
     public int connectorRoads = 8;
+    [Tooltip("How strongly connector roads prefer starting near map edges (0 = uniform, 1 = edges only).")]
+    [Range(0f, 1f)]
+    public float edgeBias = 0.85f;
 
     [Header("General")]
     [Tooltip("Random seed. 0 = random each run.")]
@@ -122,59 +128,98 @@ public class MapGenerator : MonoBehaviour
         int regionW = regionMax.x - regionMin.x;
         int regionH = regionMax.y - regionMin.y;
 
-        // Phase A: Horizontal roads — evenly spaced, each spans full width with gentle wandering
+        // Per-generation Perlin offset so each seed produces unique curves
+        float perlinOffsetX = Random.Range(0f, 10000f);
+        float perlinOffsetZ = Random.Range(0f, 10000f);
+
+        // Phase A: Horizontal roads — Perlin-curved, 2 cells wide
         for (int i = 0; i < horizontalRoads; i++)
         {
-            // Evenly space along Z axis
             int baseZ = regionMin.y + Mathf.RoundToInt((i + 0.5f) * regionH / horizontalRoads);
-            baseZ = Mathf.Clamp(baseZ, regionMin.y, regionMax.y - 1);
-            int z = baseZ;
+            baseZ = Mathf.Clamp(baseZ, regionMin.y + 1, regionMax.y - 2);
 
             for (int x = regionMin.x; x < regionMax.x; x++)
             {
-                z = Mathf.Clamp(z, regionMin.y, regionMax.y - 1);
-                roadMap[x, z] = true;
+                float noise = Mathf.PerlinNoise((x + perlinOffsetX) * curveScale, i * 17.3f);
+                int drift = Mathf.RoundToInt((noise - 0.5f) * 2f * curveAmplitude);
+                int z = Mathf.Clamp(baseZ + drift, regionMin.y, regionMax.y - 2);
 
-                // Gentle wander: drift up or down by 1 cell
-                if (Random.value < wanderChance)
-                    z += (Random.value < 0.5f) ? 1 : -1;
+                // Paint 2-wide road (this cell + the one above)
+                roadMap[x, z] = true;
+                roadMap[x, z + 1] = true;
             }
         }
 
-        // Phase B: Vertical roads — evenly spaced, each spans full height with gentle wandering
+        // Phase B: Vertical roads — Perlin-curved, 2 cells wide
         for (int i = 0; i < verticalRoads; i++)
         {
             int baseX = regionMin.x + Mathf.RoundToInt((i + 0.5f) * regionW / verticalRoads);
-            baseX = Mathf.Clamp(baseX, regionMin.x, regionMax.x - 1);
-            int x = baseX;
+            baseX = Mathf.Clamp(baseX, regionMin.x + 1, regionMax.x - 2);
 
             for (int z = regionMin.y; z < regionMax.y; z++)
             {
-                x = Mathf.Clamp(x, regionMin.x, regionMax.x - 1);
-                roadMap[x, z] = true;
+                float noise = Mathf.PerlinNoise(i * 23.7f, (z + perlinOffsetZ) * curveScale);
+                int drift = Mathf.RoundToInt((noise - 0.5f) * 2f * curveAmplitude);
+                int x = Mathf.Clamp(baseX + drift, regionMin.x, regionMax.x - 2);
 
-                if (Random.value < wanderChance)
-                    x += (Random.value < 0.5f) ? 1 : -1;
+                // Paint 2-wide road (this cell + the one to the right)
+                roadMap[x, z] = true;
+                roadMap[x + 1, z] = true;
             }
         }
 
-        // Phase C: Random connector roads — short roads linking main roads for variety
+        // Phase C: Connector roads — biased toward map edges, 2 cells wide
         for (int i = 0; i < connectorRoads; i++)
         {
-            List<Vector2Int> roadCells = GetAllRoadCells();
-            if (roadCells.Count == 0) break;
+            Vector2Int start = PickEdgeBiasedRoadCell(regionW, regionH);
+            if (start.x < 0) break; // no road cells exist
 
-            Vector2Int start = roadCells[Random.Range(0, roadCells.Count)];
             int dirIndex = Random.Range(0, 4);
+            Vector2Int dir = Cardinals[dirIndex];
+            // Perpendicular offset for 2-wide connectors
+            Vector2Int perp = new Vector2Int(Mathf.Abs(dir.y), Mathf.Abs(dir.x));
             int length = Random.Range(5, 20);
             Vector2Int current = start;
+
             for (int s = 0; s < length; s++)
             {
                 if (!InRegion(current)) break;
                 roadMap[current.x, current.y] = true;
-                current += Cardinals[dirIndex];
+                // Second lane
+                Vector2Int adj = current + perp;
+                if (InRegion(adj))
+                    roadMap[adj.x, adj.y] = true;
+                current += dir;
             }
         }
+    }
+
+    /// <summary>
+    /// Picks a road cell biased toward map edges. Higher edgeBias = stronger preference for edges.
+    /// </summary>
+    private Vector2Int PickEdgeBiasedRoadCell(int regionW, int regionH)
+    {
+        List<Vector2Int> roadCells = GetAllRoadCells();
+        if (roadCells.Count == 0) return new Vector2Int(-1, -1);
+
+        // Try up to 30 times to find an edge-biased cell
+        for (int attempt = 0; attempt < 30; attempt++)
+        {
+            Vector2Int candidate = roadCells[Random.Range(0, roadCells.Count)];
+
+            // Normalized distance from center (0 = center, 1 = edge)
+            float dx = Mathf.Abs(candidate.x - regionMin.x - regionW * 0.5f) / (regionW * 0.5f);
+            float dz = Mathf.Abs(candidate.y - regionMin.y - regionH * 0.5f) / (regionH * 0.5f);
+            float edgeness = Mathf.Max(dx, dz); // 0..1
+
+            // Accept with probability proportional to edgeness
+            float acceptChance = Mathf.Lerp(1f - edgeBias, 1f, edgeness);
+            if (Random.value < acceptChance)
+                return candidate;
+        }
+
+        // Fallback: pick any road cell
+        return roadCells[Random.Range(0, roadCells.Count)];
     }
 
     // ═══════════════════════════════════════════
