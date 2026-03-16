@@ -118,8 +118,10 @@ INSPECTOR FIELDS:
   emptySpace          CityTileData   required    Non-blocking fill tile
   generateRiver       bool           false       Toggle river generation
   riverDirection      RiverDirection Random      Random / NorthSouth / EastWest
+  riverPrefab         GameObject     null        Optional custom prefab for river visuals (auto-scaled)
   generateMountains   bool           false       Toggle mountain generation
   mountainCount       int            1           Range 0-5, number of 20x20 mountains
+  mountainPrefab      GameObject     null        Optional custom prefab for mountain visuals (auto-scaled)
   horizontalRoads     int            5           Range 3-12
   verticalRoads       int            5           Range 3-12
   roadJitter          int            1           Range 0-2, subtle block size variation
@@ -197,7 +199,12 @@ RIVER:
   NorthSouth: 6 cells wide in X, full gridHeight in Z
   EastWest: full gridWidth in X, 6 cells wide in Z
   Position: random within borderMargin constraints
-  Visual: runtime-generated blue semi-transparent Cube primitive (URP Lit, transparent)
+  Visual (riverPrefab = null): runtime-generated blue semi-transparent Cube primitive (URP Lit, transparent)
+  Visual (riverPrefab assigned): single instance, auto-scaled to fit river area via bounds measurement
+    - Measures Renderer.bounds of instantiated prefab
+    - Computes scaleX = targetWidth / nativeWidth, scaleZ = targetHeight / nativeHeight
+    - Multiplies against prefab's original localScale (not replacing it)
+    - Bounds-based centering applied after scaling
   Collider removed. Layer set to "Ignore Raycast"
   Cells marked in obstacleMap + placedMap. Marked permanent at runtime via OccupyCellsPermanent()
 
@@ -206,7 +213,11 @@ MOUNTAINS:
   Size: 20x20 cells each
   Position: random within borderMargin, must not overlap existing obstacles (river or other mountains)
   Placement: up to 100 random attempts per mountain; logs warning if no valid position found
-  Visual: runtime-generated brown Cube primitive (URP Lit, opaque), scaled to worldSize with 0.5x height
+  Visual (mountainPrefab = null): runtime-generated brown Cube primitive (URP Lit, opaque), scaled to worldSize with 0.5x height
+  Visual (mountainPrefab assigned): single instance, auto-scaled to fit mountain 20x20 cell area
+    - Measures Renderer.bounds of instantiated prefab
+    - Computes scaleXZ = worldSize / max(nativeX, nativeZ), scaleY = (worldSize*0.5) / nativeY
+    - Bounds-based centering applied after scaling
   Collider removed. Layer set to "Ignore Raycast"
   Cells marked in obstacleMap + placedMap. Marked permanent at runtime via OccupyCellsPermanent()
 
@@ -254,3 +265,32 @@ Custom Inspector with 3 buttons:
   Clear All (red)              — calls ClearMap()
   Log Prefab Scales (blue)     — calls LogPrefabScales()
 Shows grid info box when GridManager is assigned.
+
+================================================================================
+IMPORTED ASSET PACKS (URP-converted)
+================================================================================
+All imported packs originally used Built-in RP shaders. Materials converted to URP.
+
+BasicToonWaterShader (Assets/BasicToonWaterShader/):
+  Shaders rewritten from CGPROGRAM surface shaders to URP HLSLPROGRAM:
+    BasicWater.shader   — wave distortion, depth foam, pulsating transparency, Lambert lighting
+    BasicToonWater.shader — 2-pass: outline (Cull Front) + toon ramp lighting, depth foam, edge detection
+  Materials (11 total):
+    BasicWater 1-6      — use Custom/BasicWaterShader
+    BasicToonWater 1-5  — use Custom/BasicToonWaterShader
+    Pool.mat            — converted from Built-in Standard to URP Lit (dark gray opaque)
+
+Mountain Terrain rocks and tree (Assets/Mountain Terrain rocks and tree/):
+  4 materials already auto-converted to URP Lit by Unity:
+    mountain_terrain_01, rock_set_mat, bark_01, leaves_01
+  SkyWall.mat — Skybox/Cubemap shader (pipeline-agnostic, no conversion needed)
+
+Forest Pack by AurynSky (Assets/AurynSky/Forest Pack/):
+  7 materials converted to URP:
+    ColorPaletteNormal  — URP Lit (texture, specular off)
+    ColorPaletteRED     — URP Lit (texture)
+    ColorPaletteBLUE    — URP Lit (texture)
+    ShowCase            — URP Lit (dark gray, no texture)
+    Water               — URP Lit (texture, smoothness 0.036)
+    WaterTile           — URP Lit (sky-blue color, no texture)
+    CubeParticles       — URP Particles/Unlit (transparent, soft particles, tint)

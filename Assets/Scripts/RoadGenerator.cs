@@ -30,10 +30,14 @@ public class RoadGenerator : MonoBehaviour
     [Header("Environment — River")]
     public bool generateRiver = false;
     public RiverDirection riverDirection = RiverDirection.Random;
+    [Tooltip("Optional prefab for river visuals. Leave empty for default blue placeholder.")]
+    public GameObject riverPrefab;
 
     [Header("Environment — Mountains")]
     public bool generateMountains = false;
     [Range(0, 5)] public int mountainCount = 1;
+    [Tooltip("Optional prefab for mountain visuals. Leave empty for default brown placeholder.")]
+    public GameObject mountainPrefab;
 
     [Header("Road Network")]
     [Range(3, 12)] public int horizontalRoads = 5;
@@ -274,39 +278,80 @@ public class RoadGenerator : MonoBehaviour
         if (t == null) t = Terrain.activeTerrain;
         float worldY = (t != null) ? t.transform.position.y + debugYOffset : origin.y;
 
-        GameObject river = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        river.name = "River_Placeholder";
-        river.transform.SetParent(transform);
-        river.transform.position = new Vector3(worldX, worldY, worldZ);
-        river.transform.localScale = new Vector3(
+        Vector3 pos = new Vector3(worldX, worldY, worldZ);
+        Vector3 targetScale = new Vector3(
             widthCells * cellSize,
             0.3f,
             heightCells * cellSize
         );
 
-        // Blue semi-transparent material
-        Renderer rend = river.GetComponent<Renderer>();
-        Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        mat.SetFloat("_Surface", 1); // Transparent
-        mat.SetFloat("_Blend", 0);
-        mat.SetOverrideTag("RenderType", "Transparent");
-        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        mat.SetInt("_ZWrite", 0);
-        mat.renderQueue = 3000;
-        mat.color = new Color(0.1f, 0.4f, 0.9f, 0.6f);
-        rend.material = mat;
-        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-        // Remove the default box collider (it's just a visual placeholder)
-        Collider col = river.GetComponent<Collider>();
-        if (col != null)
+        if (riverPrefab != null)
         {
-            if (Application.isPlaying) Destroy(col);
-            else DestroyImmediate(col);
-        }
+            // Use custom prefab — scale it to fit the river area
+            GameObject river = Instantiate(riverPrefab, pos, Quaternion.identity, transform);
+            river.name = "River_Custom";
 
-        SetLayerRecursive(river, LayerMask.NameToLayer("Ignore Raycast"));
+            Renderer[] renderers = river.GetComponentsInChildren<Renderer>();
+            if (renderers.Length > 0)
+            {
+                Bounds b = renderers[0].bounds;
+                for (int i = 1; i < renderers.Length; i++)
+                    b.Encapsulate(renderers[i].bounds);
+
+                Vector3 nativeSize = b.size;
+                float scaleX = nativeSize.x > 0.01f ? targetScale.x / nativeSize.x : 1f;
+                float scaleZ = nativeSize.z > 0.01f ? targetScale.z / nativeSize.z : 1f;
+                Vector3 orig = river.transform.localScale;
+                river.transform.localScale = new Vector3(orig.x * scaleX, orig.y * scaleX, orig.z * scaleZ);
+
+                // Bounds-based centering
+                Vector3 offset = b.center - pos;
+                offset.x *= scaleX;
+                offset.z *= scaleZ;
+                offset.y = 0f;
+                river.transform.position -= offset;
+            }
+
+            Collider col = river.GetComponentInChildren<Collider>();
+            if (col != null)
+            {
+                if (Application.isPlaying) Destroy(col);
+                else DestroyImmediate(col);
+            }
+
+            SetLayerRecursive(river, LayerMask.NameToLayer("Ignore Raycast"));
+        }
+        else
+        {
+            // Default placeholder cube
+            GameObject river = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            river.name = "River_Placeholder";
+            river.transform.SetParent(transform);
+            river.transform.position = pos;
+            river.transform.localScale = targetScale;
+
+            Renderer rend = river.GetComponent<Renderer>();
+            Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.SetFloat("_Surface", 1);
+            mat.SetFloat("_Blend", 0);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = 3000;
+            mat.color = new Color(0.1f, 0.4f, 0.9f, 0.6f);
+            rend.material = mat;
+            rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            Collider col = river.GetComponent<Collider>();
+            if (col != null)
+            {
+                if (Application.isPlaying) Destroy(col);
+                else DestroyImmediate(col);
+            }
+
+            SetLayerRecursive(river, LayerMask.NameToLayer("Ignore Raycast"));
+        }
     }
 
     private void GenerateMountains()
@@ -369,27 +414,67 @@ public class RoadGenerator : MonoBehaviour
 
         float worldSize = size * cellSize;
 
-        GameObject mountain = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        mountain.name = $"Mountain_Placeholder_{cellX}_{cellZ}";
-        mountain.transform.SetParent(transform);
-        mountain.transform.position = new Vector3(worldX, worldY + worldSize * 0.25f, worldZ);
-        mountain.transform.localScale = new Vector3(worldSize, worldSize * 0.5f, worldSize);
-
-        // Brown/gray material
-        Renderer rend = mountain.GetComponent<Renderer>();
-        Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        mat.color = new Color(0.45f, 0.35f, 0.25f, 1f);
-        rend.material = mat;
-        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-
-        Collider col = mountain.GetComponent<Collider>();
-        if (col != null)
+        if (mountainPrefab != null)
         {
-            if (Application.isPlaying) Destroy(col);
-            else DestroyImmediate(col);
-        }
+            // Use custom prefab — scale it to fit the mountain area
+            Vector3 pos = new Vector3(worldX, worldY, worldZ);
+            GameObject mountain = Instantiate(mountainPrefab, pos, Quaternion.identity, transform);
+            mountain.name = $"Mountain_Custom_{cellX}_{cellZ}";
 
-        SetLayerRecursive(mountain, LayerMask.NameToLayer("Ignore Raycast"));
+            Renderer[] renderers = mountain.GetComponentsInChildren<Renderer>();
+            if (renderers.Length > 0)
+            {
+                Bounds b = renderers[0].bounds;
+                for (int i = 1; i < renderers.Length; i++)
+                    b.Encapsulate(renderers[i].bounds);
+
+                Vector3 nativeSize = b.size;
+                float scaleXZ = nativeSize.x > 0.01f ? worldSize / Mathf.Max(nativeSize.x, nativeSize.z) : 1f;
+                float scaleY = nativeSize.y > 0.01f ? (worldSize * 0.5f) / nativeSize.y : 1f;
+                mountain.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
+
+                // Bounds-based centering
+                Vector3 offset = b.center - pos;
+                offset.x *= scaleXZ;
+                offset.z *= scaleXZ;
+                offset.y = 0f;
+                mountain.transform.position -= offset;
+            }
+
+            Collider col = mountain.GetComponentInChildren<Collider>();
+            if (col != null)
+            {
+                if (Application.isPlaying) Destroy(col);
+                else DestroyImmediate(col);
+            }
+
+            SetLayerRecursive(mountain, LayerMask.NameToLayer("Ignore Raycast"));
+        }
+        else
+        {
+            // Default placeholder cube
+            GameObject mountain = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mountain.name = $"Mountain_Placeholder_{cellX}_{cellZ}";
+            mountain.transform.SetParent(transform);
+            mountain.transform.position = new Vector3(worldX, worldY + worldSize * 0.25f, worldZ);
+            mountain.transform.localScale = new Vector3(worldSize, worldSize * 0.5f, worldSize);
+
+            // Brown/gray material
+            Renderer rend = mountain.GetComponent<Renderer>();
+            Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.color = new Color(0.45f, 0.35f, 0.25f, 1f);
+            rend.material = mat;
+            rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+            Collider col = mountain.GetComponent<Collider>();
+            if (col != null)
+            {
+                if (Application.isPlaying) Destroy(col);
+                else DestroyImmediate(col);
+            }
+
+            SetLayerRecursive(mountain, LayerMask.NameToLayer("Ignore Raycast"));
+        }
     }
 
     // ──────────────────────────────────────────────
