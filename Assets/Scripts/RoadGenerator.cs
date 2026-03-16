@@ -1,8 +1,11 @@
 using UnityEngine;
 
+public enum RiverDirection { Random, NorthSouth, EastWest }
+
 /// <summary>
 /// Generates a straight-line road network on a grid, creating city blocks.
 /// Roads are 2x2 cells each. Blocks are filled with non-blocking empty space.
+/// Optionally generates river and mountain obstacles before roads.
 /// Attach to an empty GameObject in the scene and assign references in Inspector.
 /// </summary>
 public class RoadGenerator : MonoBehaviour
@@ -23,6 +26,14 @@ public class RoadGenerator : MonoBehaviour
 
     [Header("Fill Tile (non-blocking)")]
     public CityTileData emptySpace;
+
+    [Header("Environment — River")]
+    public bool generateRiver = false;
+    public RiverDirection riverDirection = RiverDirection.Random;
+
+    [Header("Environment — Mountains")]
+    public bool generateMountains = false;
+    [Range(0, 5)] public int mountainCount = 1;
 
     [Header("Road Network")]
     [Range(3, 12)] public int horizontalRoads = 5;
@@ -47,6 +58,7 @@ public class RoadGenerator : MonoBehaviour
     // Internal state
     private bool[,] roadMap;      // true = road cell
     private bool[,] placedMap;    // true = prefab already placed here
+    private bool[,] obstacleMap;  // true = river or mountain cell (roads cannot use)
     private int gridWidth, gridHeight;
     private float cellSize;
     private float referenceScale; // scale computed from filler1, applied to all road tiles
@@ -71,6 +83,12 @@ public class RoadGenerator : MonoBehaviour
             Random.InitState(randomSeed);
         else
             Random.InitState(System.Environment.TickCount);
+
+        // Environment obstacles first — roads will avoid these cells
+        if (generateRiver)
+            GenerateRiver();
+        if (generateMountains)
+            GenerateMountains();
 
         GenerateRoadNetwork();
         ComputeReferenceScale();
@@ -109,6 +127,7 @@ public class RoadGenerator : MonoBehaviour
     {
         roadMap = new bool[gridWidth, gridHeight];
         placedMap = new bool[gridWidth, gridHeight];
+        obstacleMap = new bool[gridWidth, gridHeight];
     }
 
     /// <summary>
@@ -181,6 +200,199 @@ public class RoadGenerator : MonoBehaviour
     }
 
     // ──────────────────────────────────────────────
+    //  Environment — River & Mountains
+    // ──────────────────────────────────────────────
+
+    private void GenerateRiver()
+    {
+        int riverWidth = 6;
+
+        // Decide direction
+        bool northSouth;
+        if (riverDirection == RiverDirection.NorthSouth)
+            northSouth = true;
+        else if (riverDirection == RiverDirection.EastWest)
+            northSouth = false;
+        else
+            northSouth = Random.value < 0.5f;
+
+        if (northSouth)
+        {
+            // River runs along Z axis (full height), 6 cells wide in X
+            int maxStart = gridWidth - riverWidth;
+            int startX = Random.Range(borderMargin, maxStart - borderMargin + 1);
+
+            // Mark obstacle cells
+            for (int x = startX; x < startX + riverWidth; x++)
+                for (int z = 0; z < gridHeight; z++)
+                    if (InBounds(x, z))
+                    {
+                        obstacleMap[x, z] = true;
+                        placedMap[x, z] = true;
+                    }
+
+            // Create placeholder visual
+            CreateRiverPlaceholder(startX, 0, riverWidth, gridHeight, northSouth);
+            Debug.Log($"[RoadGenerator] River: North-South at X={startX}, width={riverWidth}");
+        }
+        else
+        {
+            // River runs along X axis (full width), 6 cells wide in Z
+            int maxStart = gridHeight - riverWidth;
+            int startZ = Random.Range(borderMargin, maxStart - borderMargin + 1);
+
+            for (int x = 0; x < gridWidth; x++)
+                for (int z = startZ; z < startZ + riverWidth; z++)
+                    if (InBounds(x, z))
+                    {
+                        obstacleMap[x, z] = true;
+                        placedMap[x, z] = true;
+                    }
+
+            CreateRiverPlaceholder(0, startZ, gridWidth, riverWidth, northSouth);
+            Debug.Log($"[RoadGenerator] River: East-West at Z={startZ}, width={riverWidth}");
+        }
+
+        // Mark cells permanent at runtime
+        if (Application.isPlaying)
+        {
+            for (int x = 0; x < gridWidth; x++)
+                for (int z = 0; z < gridHeight; z++)
+                    if (obstacleMap[x, z])
+                        gridManager.OccupyCellsPermanent(new Vector2Int(x, z), 1);
+        }
+    }
+
+    private void CreateRiverPlaceholder(int cellX, int cellZ, int widthCells, int heightCells, bool northSouth)
+    {
+        Vector3 origin = gridManager.GridOrigin;
+
+        float worldX = origin.x + cellX * cellSize + (widthCells * cellSize) * 0.5f;
+        float worldZ = origin.z + cellZ * cellSize + (heightCells * cellSize) * 0.5f;
+
+        Terrain t = gridManager.terrain;
+        if (t == null) t = Terrain.activeTerrain;
+        float worldY = (t != null) ? t.transform.position.y + debugYOffset : origin.y;
+
+        GameObject river = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        river.name = "River_Placeholder";
+        river.transform.SetParent(transform);
+        river.transform.position = new Vector3(worldX, worldY, worldZ);
+        river.transform.localScale = new Vector3(
+            widthCells * cellSize,
+            0.3f,
+            heightCells * cellSize
+        );
+
+        // Blue semi-transparent material
+        Renderer rend = river.GetComponent<Renderer>();
+        Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        mat.SetFloat("_Surface", 1); // Transparent
+        mat.SetFloat("_Blend", 0);
+        mat.SetOverrideTag("RenderType", "Transparent");
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.renderQueue = 3000;
+        mat.color = new Color(0.1f, 0.4f, 0.9f, 0.6f);
+        rend.material = mat;
+        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+        // Remove the default box collider (it's just a visual placeholder)
+        Collider col = river.GetComponent<Collider>();
+        if (col != null)
+        {
+            if (Application.isPlaying) Destroy(col);
+            else DestroyImmediate(col);
+        }
+
+        SetLayerRecursive(river, LayerMask.NameToLayer("Ignore Raycast"));
+    }
+
+    private void GenerateMountains()
+    {
+        int mountainSize = 20;
+
+        for (int m = 0; m < mountainCount; m++)
+        {
+            // Try to find a valid position that doesn't overlap obstacles
+            int maxAttempts = 100;
+            bool placed = false;
+
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                int startX = Random.Range(borderMargin, gridWidth - borderMargin - mountainSize);
+                int startZ = Random.Range(borderMargin, gridHeight - borderMargin - mountainSize);
+
+                // Check for overlap with existing obstacles
+                bool overlaps = false;
+                for (int x = startX; x < startX + mountainSize && !overlaps; x++)
+                    for (int z = startZ; z < startZ + mountainSize && !overlaps; z++)
+                        if (obstacleMap[x, z])
+                            overlaps = true;
+
+                if (overlaps) continue;
+
+                // Mark cells
+                for (int x = startX; x < startX + mountainSize; x++)
+                    for (int z = startZ; z < startZ + mountainSize; z++)
+                    {
+                        obstacleMap[x, z] = true;
+                        placedMap[x, z] = true;
+                    }
+
+                // Mark permanent at runtime
+                if (Application.isPlaying)
+                    gridManager.OccupyCellsPermanent(new Vector2Int(startX, startZ), mountainSize);
+
+                CreateMountainPlaceholder(startX, startZ, mountainSize);
+                Debug.Log($"[RoadGenerator] Mountain {m + 1}: at cell ({startX},{startZ}), size {mountainSize}x{mountainSize}");
+                placed = true;
+                break;
+            }
+
+            if (!placed)
+                Debug.LogWarning($"[RoadGenerator] Could not place mountain {m + 1} — no valid position found after {maxAttempts} attempts.");
+        }
+    }
+
+    private void CreateMountainPlaceholder(int cellX, int cellZ, int size)
+    {
+        Vector3 origin = gridManager.GridOrigin;
+
+        float worldX = origin.x + cellX * cellSize + (size * cellSize) * 0.5f;
+        float worldZ = origin.z + cellZ * cellSize + (size * cellSize) * 0.5f;
+
+        Terrain t = gridManager.terrain;
+        if (t == null) t = Terrain.activeTerrain;
+        float worldY = (t != null) ? t.transform.position.y + debugYOffset : origin.y;
+
+        float worldSize = size * cellSize;
+
+        GameObject mountain = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        mountain.name = $"Mountain_Placeholder_{cellX}_{cellZ}";
+        mountain.transform.SetParent(transform);
+        mountain.transform.position = new Vector3(worldX, worldY + worldSize * 0.25f, worldZ);
+        mountain.transform.localScale = new Vector3(worldSize, worldSize * 0.5f, worldSize);
+
+        // Brown/gray material
+        Renderer rend = mountain.GetComponent<Renderer>();
+        Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        mat.color = new Color(0.45f, 0.35f, 0.25f, 1f);
+        rend.material = mat;
+        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+        Collider col = mountain.GetComponent<Collider>();
+        if (col != null)
+        {
+            if (Application.isPlaying) Destroy(col);
+            else DestroyImmediate(col);
+        }
+
+        SetLayerRecursive(mountain, LayerMask.NameToLayer("Ignore Raycast"));
+    }
+
+    // ──────────────────────────────────────────────
     //  Road Network — straight lines with jitter
     // ──────────────────────────────────────────────
 
@@ -250,6 +462,16 @@ public class RoadGenerator : MonoBehaviour
 
     private void PaintBlock(int x, int z)
     {
+        // Check if any cell in this 2x2 block is an obstacle
+        for (int dx = 0; dx < 2; dx++)
+            for (int dz = 0; dz < 2; dz++)
+            {
+                int cx = x + dx;
+                int cz = z + dz;
+                if (!InBounds(cx, cz) || obstacleMap[cx, cz])
+                    return; // skip entire block
+            }
+
         for (int dx = 0; dx < 2; dx++)
             for (int dz = 0; dz < 2; dz++)
             {
@@ -419,7 +641,7 @@ public class RoadGenerator : MonoBehaviour
                     for (int dz = 0; dz < fillSize && !blocked; dz++)
                     {
                         int cx = x + dx, cz = z + dz;
-                        if (!InBounds(cx, cz) || roadMap[cx, cz] || placedMap[cx, cz])
+                        if (!InBounds(cx, cz) || roadMap[cx, cz] || placedMap[cx, cz] || obstacleMap[cx, cz])
                             blocked = true;
                     }
 

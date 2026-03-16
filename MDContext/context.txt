@@ -11,7 +11,7 @@ Main scene: Assets/Scenes/Level_0.unity
 ACTIVE SCRIPTS (Assets/Scripts/)
 ================================================================================
 GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid
-RoadGenerator.cs        — Procedural road network with 9 tile types
+RoadGenerator.cs        — Procedural road network with 9 tile types + river/mountain generation
 BuildingPlacer.cs       — Mouse-based building placement on grid
 BorderForestSpawner.cs  — Decorative trees around grid border
 EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
@@ -32,7 +32,7 @@ EnvironmentData.cs      — ScriptableObject for environment objects
 EnvironmentObject.cs    — Environment object component
 
 EDITOR SCRIPTS (Assets/Editor/)
-RoadGeneratorEditor.cs  — Generate/Clear/Log Prefab Scales buttons
+RoadGeneratorEditor.cs  — Generate All/Clear All/Log Prefab Scales buttons
 
 UNUSED SCRIPTS (Assets/Not Being Used/)
 WFCCityGenerator.cs, CityTileAdjacencyRule.cs
@@ -116,6 +116,10 @@ INSPECTOR FIELDS:
   roadIntersection    CityTileData   required    4-way crossing
   roadBranch          CityTileData   required    T-junction / corners
   emptySpace          CityTileData   required    Non-blocking fill tile
+  generateRiver       bool           false       Toggle river generation
+  riverDirection      RiverDirection Random      Random / NorthSouth / EastWest
+  generateMountains   bool           false       Toggle mountain generation
+  mountainCount       int            1           Range 0-5, number of 20x20 mountains
   horizontalRoads     int            5           Range 3-12
   verticalRoads       int            5           Range 3-12
   roadJitter          int            1           Range 0-2, subtle block size variation
@@ -129,11 +133,13 @@ INSPECTOR FIELDS:
 GENERATION FLOW:
   1. CacheGridSettings() — reads gridWidth, gridHeight, cellSize from GridManager
   2. ClearMap() — destroys all children
-  3. InitGrids() — creates roadMap and placedMap bool arrays
-  4. GenerateRoadNetwork() — paints straight horizontal/vertical roads on roadMap
-  5. ComputeReferenceScale() — measures filler1 bounds, computes uniform scale for all tiles
-  6. InstantiateRoadTiles() — classifies 2x2 blocks by neighbor count, picks tile + rotation
-  7. FillEmptySpace() — fills non-road cells with emptySpace (no grid blocking)
+  3. InitGrids() — creates roadMap, placedMap, and obstacleMap bool arrays
+  4. GenerateRiver() — (if enabled) places 6-cell-wide straight river edge-to-edge, marks obstacleMap
+  5. GenerateMountains() — (if enabled) places N 20x20 mountains at random positions avoiding obstacles
+  6. GenerateRoadNetwork() — paints straight horizontal/vertical roads on roadMap (skips obstacle cells)
+  7. ComputeReferenceScale() — measures filler1 bounds, computes uniform scale for all tiles
+  8. InstantiateRoadTiles() — classifies 2x2 blocks by neighbor count, picks tile + rotation
+  9. FillEmptySpace() — fills non-road, non-obstacle cells with emptySpace (no grid blocking)
 
 ROAD CLASSIFICATION (by neighbor count):
   0 neighbors -> roadStart, rotation 0
@@ -179,6 +185,38 @@ WORLD POSITION (GetWorldPosition):
   Matches BuildingPlacer.GridCellToWorldPos formula exactly
 
 ================================================================================
+ENVIRONMENT GENERATION (River & Mountains)
+================================================================================
+Generated BEFORE roads. Both mark obstacleMap[,] — roads skip obstacle cells entirely.
+PaintBlock() checks all 4 cells in a 2x2 block; if any is an obstacle, the whole block is skipped.
+FillEmptySpace() also skips obstacle cells.
+
+RIVER:
+  Direction: RiverDirection enum (Random, NorthSouth, EastWest)
+  Width: 6 cells, spans full grid edge-to-edge
+  NorthSouth: 6 cells wide in X, full gridHeight in Z
+  EastWest: full gridWidth in X, 6 cells wide in Z
+  Position: random within borderMargin constraints
+  Visual: runtime-generated blue semi-transparent Cube primitive (URP Lit, transparent)
+  Collider removed. Layer set to "Ignore Raycast"
+  Cells marked in obstacleMap + placedMap. Marked permanent at runtime via OccupyCellsPermanent()
+
+MOUNTAINS:
+  Count: configurable (0-5), default 1
+  Size: 20x20 cells each
+  Position: random within borderMargin, must not overlap existing obstacles (river or other mountains)
+  Placement: up to 100 random attempts per mountain; logs warning if no valid position found
+  Visual: runtime-generated brown Cube primitive (URP Lit, opaque), scaled to worldSize with 0.5x height
+  Collider removed. Layer set to "Ignore Raycast"
+  Cells marked in obstacleMap + placedMap. Marked permanent at runtime via OccupyCellsPermanent()
+
+OBSTACLE AVOIDANCE ORDER:
+  1. River generates first (if enabled)
+  2. Mountains avoid river cells (if both enabled)
+  3. Roads avoid all obstacle cells (PaintBlock skips if any cell in 2x2 is obstacle)
+  4. FillEmptySpace skips obstacle cells
+
+================================================================================
 ROAD PREFAB DETAILS
 ================================================================================
 Prefab folder: Assets/Prefabs/Roads with Grass/
@@ -212,7 +250,7 @@ All road assets have sizeInCells: 2
 EDITOR: RoadGeneratorEditor.cs (Assets/Editor/)
 ================================================================================
 Custom Inspector with 3 buttons:
-  Generate Roads (green)     — calls Generate()
-  Clear Roads (red)          — calls ClearMap()
-  Log Prefab Scales (blue)   — calls LogPrefabScales()
+  Generate All (green)         — calls Generate() (river + mountains + roads + fill)
+  Clear All (red)              — calls ClearMap()
+  Log Prefab Scales (blue)     — calls LogPrefabScales()
 Shows grid info box when GridManager is assigned.

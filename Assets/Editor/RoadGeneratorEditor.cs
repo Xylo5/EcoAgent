@@ -24,19 +24,19 @@ public class RoadGeneratorEditor : Editor
         }
 
         EditorGUILayout.Space(12);
-        EditorGUILayout.LabelField("Road Generation", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Generation", EditorStyles.boldLabel);
 
         GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
-        if (GUILayout.Button("Generate Roads", GUILayout.Height(36)))
+        if (GUILayout.Button("Generate All", GUILayout.Height(36)))
         {
-            Undo.RegisterFullObjectHierarchyUndo(generator.gameObject, "Generate Roads");
+            Undo.RegisterFullObjectHierarchyUndo(generator.gameObject, "Generate All");
             generator.Generate();
         }
 
         GUI.backgroundColor = new Color(0.9f, 0.35f, 0.3f);
-        if (GUILayout.Button("Clear Roads", GUILayout.Height(28)))
+        if (GUILayout.Button("Clear All", GUILayout.Height(28)))
         {
-            Undo.RegisterFullObjectHierarchyUndo(generator.gameObject, "Clear Roads");
+            Undo.RegisterFullObjectHierarchyUndo(generator.gameObject, "Clear All");
             generator.ClearMap();
         }
 
