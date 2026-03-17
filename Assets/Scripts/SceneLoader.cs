@@ -23,4 +23,9 @@ public static class SceneLoader
     {
         SceneManager.LoadScene("Level_" + levelIndex);
     }
+
+    public static void LoadResult()
+    {
+        SceneManager.LoadScene("Result");
+    }
 }

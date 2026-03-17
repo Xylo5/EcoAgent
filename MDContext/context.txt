@@ -22,19 +22,22 @@ CameraController.cs     — Camera movement
 PlacedBuilding.cs       — Tracks placed building state
 PollutionManager.cs     — Pollution system
 BuildingUI.cs           — Building selection UI
-LevelHUD.cs             — In-game HUD
+LevelHUD.cs             — In-game HUD with Check button (bottom-right, pollution win/lose check)
 MainMenuUI.cs           — Main menu
 PlacementConfirmUI.cs   — Confirm/cancel building placement
 LevelSelectUI.cs        — Level selection screen
 InputManager.cs         — Input handling (R key for building rotation)
 GridCellHighlighter.cs  — Highlights grid cells (rectangular support)
-SceneLoader.cs          — Scene loading utility
+SceneLoader.cs          — Scene loading utility (MainMenu, LevelSelect, Level_N, Result)
 EnvironmentData.cs      — ScriptableObject for environment objects
 EnvironmentObject.cs    — Environment object component
+ResultData.cs           — Static class: passes pollution score, win/lose, level index between scenes
+ResultUI.cs             — Code-generated result screen (win/lose, score, retry/level select buttons)
 
 EDITOR SCRIPTS (Assets/Editor/)
 RoadGeneratorEditor.cs      — Generate All/Clear All/Log Prefab Scales buttons
 CityGeneratorEditor.cs      — Generate Buildings/Clear Buildings buttons
+CreateResultScene.cs        — Tools > Create Result Scene (one-time scene + Build Settings setup)
 
 UNUSED SCRIPTS (Assets/Not Being Used/)
 WFCCityGenerator.cs, CityTileAdjacencyRule.cs
@@ -400,6 +403,58 @@ Custom Inspector with 2 buttons:
   Clear Buildings (red)       — calls ClearMap() (removes all generated buildings)
 Shows grid info box with grid size, cell size, and building count when GridManager assigned.
 Supports full Undo via Undo.RegisterFullObjectHierarchyUndo().
+
+================================================================================
+SCENES (Assets/Scenes/)
+================================================================================
+MainMenu.unity          — Main menu screen
+LevelSelect.unity       — Level selection (5 buttons, only Level 1 enabled)
+Level_0.unity           — Main gameplay level
+Result.unity            — Win/lose result screen (code-generated UI)
+
+================================================================================
+WIN/LOSE CHECK SYSTEM
+================================================================================
+Flow: LevelHUD (Check button) → ResultData → SceneLoader.LoadResult() → ResultUI
+
+CHECK BUTTON (LevelHUD.cs):
+  - Code-generated orange button in bottom-right corner of Level 0 HUD
+  - On click: reads PollutionManager.GetPollution()
+  - Win condition: pollution < 0 (player must fully offset starting pollution)
+  - Sets ResultData static fields (PollutionScore, Won, LevelIndex)
+  - Calls SceneLoader.LoadResult() to transition to Result scene
+
+RESULT DATA (ResultData.cs):
+  Static class for passing data between scenes (no MonoBehaviour needed):
+    ResultData.PollutionScore  — int, final pollution value
+    ResultData.Won             — bool, true if pollution < 0
+    ResultData.LevelIndex      — int, which level was played (for retry)
+
+RESULT SCENE (ResultUI.cs):
+  Fully code-generated UI at runtime — no manual Canvas/EventSystem setup needed.
+  BuildUI() creates at Start():
+    - Canvas (ScreenSpaceOverlay, 1920x1080 reference)
+    - EventSystem + InputSystemUIInputModule (new Input System, not StandaloneInputModule)
+    - Dark background overlay
+    - Center panel with:
+      - Title: green "YOU WIN!" or red "YOU LOSE"
+      - Score: "Pollution: N"
+      - Hint: context-appropriate message
+      - "Level Select" button → SceneLoader.LoadLevelSelect()
+      - "Retry" button → SceneLoader.LoadLevel(ResultData.LevelIndex)
+  Escape key also returns to Level Select.
+
+SCENE LOADER (SceneLoader.cs):
+  Static utility with methods:
+    LoadMainMenu()      → "MainMenu"
+    LoadLevelSelect()   → "LevelSelect"
+    LoadLevel(index)    → "Level_N"
+    LoadResult()        → "Result"
+
+INPUT SYSTEM NOTE:
+  Project uses new Input System package (not legacy UnityEngine.Input).
+  UI EventSystem must use InputSystemUIInputModule, NOT StandaloneInputModule.
+  StandaloneInputModule causes InvalidOperationException at runtime.
 
 ================================================================================
 IMPORTED ASSET PACKS (URP-converted)
