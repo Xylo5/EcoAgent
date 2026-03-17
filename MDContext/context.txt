@@ -10,7 +10,7 @@ Main scene: Assets/Scenes/Level_0.unity
 ================================================================================
 ACTIVE SCRIPTS (Assets/Scripts/)
 ================================================================================
-GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid
+GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid, manual placement scanning
 RoadGenerator.cs        — Procedural road network with 9 tile types + river/mountain generation
 CityGenerator.cs        — Procedural building placement near roads (scene-view only)
 BuildingPlacer.cs       — Mouse-based building placement on grid
@@ -67,6 +67,18 @@ Cell Occupancy:
   Both arrays initialized in Awake() — NULL in edit mode
   OccupyCellsPermanent() must only be called at runtime (guard with Application.isPlaying)
 
+Manual Placement Scanning:
+  GridManager.Start() calls MarkManualPlacementsAtRuntime():
+    - Scans manualPlacementParents[] (inspector array of parent Transforms)
+    - Auto-finds GameObject named "ManualBuildings" if array is not assigned
+    - For each child under each parent: computes combined Renderer.bounds
+    - Converts bounds to grid cell range (Floor/Ceil) and marks cells permanent
+    - Ensures manually placed scene prefabs block the grid at runtime
+    - Logs per-object details: name, bounds, cell range
+  Usage: Create an empty "ManualBuildings" GameObject in the scene,
+         parent any manually placed building prefabs under it.
+         No inspector assignment needed — auto-discovered by name.
+
 Edit Mode Gotchas:
   cellSize is 0 until Awake runs -> always use fallback: cellSize > 0 ? cellSize : 2.5f
   terrain field may be null if not Inspector-assigned -> use Terrain.activeTerrain fallback
@@ -87,6 +99,7 @@ Key Methods:
   OccupyCellsPermanent(cell, size)  — Mark cells permanent (square, delegates to rectangular)
   OccupyCellsPermanent(cell, sizeX, sizeZ) — Mark cells permanent (rectangular)
   IsCellPermanent(cell)             — Check if permanently blocked
+  MarkManualPlacementsAtRuntime()   — Scans ManualBuildings children, marks permanent
 
 World Position Formula (used by BuildingPlacer, RoadGenerator):
   x = GridOrigin.x + cell.x * cellSize + (size * cellSize) / 2
