@@ -11,6 +11,7 @@ public class LevelHUD : MonoBehaviour
 {
     [Header("UI References")]
     public Button backButton;
+    public RequiredBuildingsUI requiredBuildingsUI;
 
     private Button checkButton;
 
@@ -80,8 +81,13 @@ public class LevelHUD : MonoBehaviour
         if (PollutionManager.Instance != null)
             pollution = PollutionManager.Instance.GetPollution();
 
+        bool allBuildings = true;
+        if (requiredBuildingsUI != null)
+            allBuildings = requiredBuildingsUI.AreAllRequirementsMet();
+
         ResultData.PollutionScore = pollution;
-        ResultData.Won = pollution < 0;
+        ResultData.AllBuildingsPlaced = allBuildings;
+        ResultData.Won = pollution < 0 && allBuildings;
         ResultData.LevelIndex = 0; // Level_0
 
         SceneLoader.LoadResult();

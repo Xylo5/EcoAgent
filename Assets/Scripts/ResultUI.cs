@@ -72,8 +72,16 @@ public class ResultUI : MonoBehaviour
             Color.white, 36, new Vector2(0, 30));
 
         // Threshold hint
+        string hintMsg;
+        if (won)
+            hintMsg = "Pollution is below 0!";
+        else if (!ResultData.AllBuildingsPlaced)
+            hintMsg = "Not all required buildings were placed.";
+        else
+            hintMsg = "Reduce pollution below 0 to win.";
+
         CreateText(panel.transform, "HintText",
-            won ? "Pollution is below 0!" : "Reduce pollution below 0 to win.",
+            hintMsg,
             new Color(0.7f, 0.7f, 0.7f), 22, new Vector2(0, -20));
 
         // Buttons

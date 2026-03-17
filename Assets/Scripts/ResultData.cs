@@ -6,5 +6,6 @@ public static class ResultData
 {
     public static int PollutionScore;
     public static bool Won;
+    public static bool AllBuildingsPlaced;
     public static int LevelIndex;
 }

@@ -13,17 +13,19 @@ ACTIVE SCRIPTS (Assets/Scripts/)
 GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid, manual placement scanning
 RoadGenerator.cs        — Procedural road network with 9 tile types + river/mountain generation
 CityGenerator.cs        — Procedural building placement near roads (scene-view only)
-BuildingPlacer.cs       — Mouse-based building placement on grid
+BuildingPlacer.cs       — Mouse-based building placement on grid; triggers RequiredBuildingsUI scan
 BuildingPlaceAnimation.cs — Rise-from-ground placement anim + dust particles + sound hook
 BorderForestSpawner.cs  — Decorative trees around grid border
 EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
 CityTileData.cs         — ScriptableObject: tileName, sizeInCells, prefabs[]
 BuildingData.cs         — ScriptableObject for building definitions
+LevelRequirements.cs    — ScriptableObject: per-level required BuildingData[] list
 CameraController.cs     — Camera movement
 PlacedBuilding.cs       — Tracks placed building state
 PollutionManager.cs     — Pollution system
+RequiredBuildingsUI.cs  — "REQUIRED" button + expandable checklist + map scan for required buildings
 BuildingUI.cs           — Building selection UI
-LevelHUD.cs             — In-game HUD with Check button (bottom-right, pollution win/lose check)
+LevelHUD.cs             — In-game HUD with Check + Required buttons, gates win on buildings + pollution
 MainMenuUI.cs           — Main menu
 PlacementConfirmUI.cs   — Confirm/cancel building placement
 LevelSelectUI.cs        — Level selection screen
@@ -32,8 +34,8 @@ GridCellHighlighter.cs  — Highlights grid cells (rectangular support)
 SceneLoader.cs          — Scene loading utility (MainMenu, LevelSelect, Level_N, Result)
 EnvironmentData.cs      — ScriptableObject for environment objects
 EnvironmentObject.cs    — Environment object component
-ResultData.cs           — Static class: passes pollution score, win/lose, level index between scenes
-ResultUI.cs             — Code-generated result screen (win/lose, score, retry/level select buttons)
+ResultData.cs           — Static class: passes pollution score, win/lose, allBuildingsPlaced, level index
+ResultUI.cs             — Code-generated result screen (win/lose, score, hint, retry/level select)
 
 EDITOR SCRIPTS (Assets/Editor/)
 RoadGeneratorEditor.cs      — Generate All/Clear All/Log Prefab Scales buttons
@@ -417,19 +419,21 @@ Result.unity            — Win/lose result screen (code-generated UI)
 WIN/LOSE CHECK SYSTEM
 ================================================================================
 Flow: LevelHUD (Check button) → ResultData → SceneLoader.LoadResult() → ResultUI
+Win condition: pollution < 0 AND all required buildings placed.
 
 CHECK BUTTON (LevelHUD.cs):
   - Code-generated orange button in bottom-right corner of Level 0 HUD
-  - On click: reads PollutionManager.GetPollution()
-  - Win condition: pollution < 0 (player must fully offset starting pollution)
-  - Sets ResultData static fields (PollutionScore, Won, LevelIndex)
+  - On click: reads PollutionManager.GetPollution() + RequiredBuildingsUI.AreAllRequirementsMet()
+  - Win condition: pollution < 0 AND allBuildingsPlaced
+  - Sets ResultData static fields (PollutionScore, Won, AllBuildingsPlaced, LevelIndex)
   - Calls SceneLoader.LoadResult() to transition to Result scene
 
 RESULT DATA (ResultData.cs):
   Static class for passing data between scenes (no MonoBehaviour needed):
-    ResultData.PollutionScore  — int, final pollution value
-    ResultData.Won             — bool, true if pollution < 0
-    ResultData.LevelIndex      — int, which level was played (for retry)
+    ResultData.PollutionScore      — int, final pollution value
+    ResultData.Won                 — bool, true if pollution < 0 AND all buildings placed
+    ResultData.AllBuildingsPlaced  — bool, true if every required building has a placed instance
+    ResultData.LevelIndex          — int, which level was played (for retry)
 
 RESULT SCENE (ResultUI.cs):
   Fully code-generated UI at runtime — no manual Canvas/EventSystem setup needed.
@@ -440,10 +444,47 @@ RESULT SCENE (ResultUI.cs):
     - Center panel with:
       - Title: green "YOU WIN!" or red "YOU LOSE"
       - Score: "Pollution: N"
-      - Hint: context-appropriate message
+      - Hint: "Pollution is below 0!" (win), "Not all required buildings were placed." (missing),
+              or "Reduce pollution below 0 to win." (pollution too high)
       - "Level Select" button → SceneLoader.LoadLevelSelect()
       - "Retry" button → SceneLoader.LoadLevel(ResultData.LevelIndex)
   Escape key also returns to Level Select.
+
+================================================================================
+REQUIRED BUILDINGS CHECKLIST (RequiredBuildingsUI.cs)
+================================================================================
+MonoBehaviour attached to a GameObject in Level_0.
+Displays a blue "REQUIRED" button directly above the orange "CHECK" button.
+
+INSPECTOR FIELDS:
+  levelRequirements     LevelRequirements    required    ScriptableObject with BuildingData[] list
+
+UI LAYOUT (code-generated in Start):
+  - "REQUIRED" button: bottom-right, anchoredPosition (-20, 80), size (160, 50), blue
+  - Checklist panel: dark semi-transparent panel above button, anchoredPosition (-20, 140)
+  - Each row: "<buildingName> must be built" — red (missing) or green (placed)
+  - Panel starts collapsed; click button to toggle
+
+SCAN LOGIC (ScanForBuildings):
+  - Finds all PlacedBuilding components in scene via FindObjectsByType
+  - Matches each required BuildingData by ScriptableObject reference (not string name)
+  - Updates text color per entry: green if found, red if missing
+  - Called automatically after every placement/move (triggered by BuildingPlacer)
+  - Also called when checklist panel is opened
+
+PUBLIC API:
+  ScanForBuildings()        — Full map scan, updates checklist colors
+  AreAllRequirementsMet()   — Returns true if all required buildings are placed
+
+LEVEL REQUIREMENTS (LevelRequirements.cs):
+  ScriptableObject: Assets > Create > Building > LevelRequirements
+  Fields: BuildingData[] requiredBuildings
+  Create one asset per level (e.g., Level0Requirements.asset)
+  Assign different buildings per level for modular configuration.
+
+SCENE WIRING:
+  BuildingPlacer.requiredBuildingsUI  → triggers ScanForBuildings() after placement/move
+  LevelHUD.requiredBuildingsUI        → checks AreAllRequirementsMet() in OnCheck()
 
 SCENE LOADER (SceneLoader.cs):
   Static utility with methods:

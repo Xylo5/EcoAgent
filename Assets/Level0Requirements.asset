@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4932f154390fc146beda81ca87253bd, type: 3}
+  m_Name: Level0Requirements
+  m_EditorClassIdentifier: Assembly-CSharp::LevelRequirements
+  requiredBuildings:
+  - {fileID: 11400000, guid: 8445fd87f9114a9989c0fcdf60e30711, type: 2}
+  - {fileID: 11400000, guid: 224661328b458fb4f8e04b658bd1775f, type: 2}
+  - {fileID: 11400000, guid: 46b44028c809630469659e941749bdec, type: 2}

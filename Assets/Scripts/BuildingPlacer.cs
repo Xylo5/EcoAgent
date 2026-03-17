@@ -15,6 +15,7 @@ public class BuildingPlacer : MonoBehaviour
     public GridCellHighlighter cellHighlighter;
     public PlacementConfirmUI confirmUI;
     public BuildingUI buildingUI;
+    public RequiredBuildingsUI requiredBuildingsUI;
 
     [Header("Placement Settings")]
     public LayerMask buildingLayer;
@@ -410,6 +411,10 @@ public class BuildingPlacer : MonoBehaviour
 
         Debug.Log($"[BuildingPlacer] Placed {currentBuildingData.buildingName} at ({ghostGridCell.x}, {ghostGridCell.y})");
 
+        // Refresh required buildings checklist
+        if (requiredBuildingsUI != null)
+            requiredBuildingsUI.ScanForBuildings();
+
         CleanupPlacement();
     }
 
@@ -425,6 +430,10 @@ public class BuildingPlacer : MonoBehaviour
         SetBuildingVisible(movingBuilding.gameObject, true);
 
         Debug.Log($"[BuildingPlacer] Moved {currentBuildingData.buildingName} to ({ghostGridCell.x}, {ghostGridCell.y})");
+
+        // Refresh required buildings checklist
+        if (requiredBuildingsUI != null)
+            requiredBuildingsUI.ScanForBuildings();
 
         movingBuilding = null;
         CleanupPlacement();
