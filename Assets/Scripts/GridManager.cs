@@ -337,9 +337,14 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public void OccupyCellsPermanent(Vector2Int startCell, int size)
     {
-        for (int x = startCell.x; x < startCell.x + size; x++)
+        OccupyCellsPermanent(startCell, size, size);
+    }
+
+    public void OccupyCellsPermanent(Vector2Int startCell, int sizeX, int sizeZ)
+    {
+        for (int x = startCell.x; x < startCell.x + sizeX; x++)
         {
-            for (int z = startCell.y; z < startCell.y + size; z++)
+            for (int z = startCell.y; z < startCell.y + sizeZ; z++)
             {
                 if (x >= 0 && x < gridWidth && z >= 0 && z < gridHeight)
                 {

@@ -874,9 +874,14 @@ public class RoadGenerator : MonoBehaviour
     {
         CacheGridSettings();
         Vector3 origin = gridManager.GridOrigin;
+        string emptyName = emptySpace != null ? emptySpace.tileName : "";
 
         foreach (Transform child in transform)
         {
+            // Skip empty space filler tiles — they are non-blocking
+            if (!string.IsNullOrEmpty(emptyName) && child.name.StartsWith(emptyName))
+                continue;
+
             Renderer[] renderers = child.GetComponentsInChildren<Renderer>();
             if (renderers.Length == 0) continue;
 

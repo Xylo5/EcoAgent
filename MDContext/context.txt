@@ -12,6 +12,7 @@ ACTIVE SCRIPTS (Assets/Scripts/)
 ================================================================================
 GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid
 RoadGenerator.cs        — Procedural road network with 9 tile types + river/mountain generation
+CityGenerator.cs        — Procedural building placement near roads (scene-view only)
 BuildingPlacer.cs       — Mouse-based building placement on grid
 BorderForestSpawner.cs  — Decorative trees around grid border
 EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
@@ -25,14 +26,15 @@ LevelHUD.cs             — In-game HUD
 MainMenuUI.cs           — Main menu
 PlacementConfirmUI.cs   — Confirm/cancel building placement
 LevelSelectUI.cs        — Level selection screen
-InputManager.cs         — Input handling
-GridCellHighlighter.cs  — Highlights grid cells
+InputManager.cs         — Input handling (R key for building rotation)
+GridCellHighlighter.cs  — Highlights grid cells (rectangular support)
 SceneLoader.cs          — Scene loading utility
 EnvironmentData.cs      — ScriptableObject for environment objects
 EnvironmentObject.cs    — Environment object component
 
 EDITOR SCRIPTS (Assets/Editor/)
-RoadGeneratorEditor.cs  — Generate All/Clear All/Log Prefab Scales buttons
+RoadGeneratorEditor.cs      — Generate All/Clear All/Log Prefab Scales buttons
+CityGeneratorEditor.cs      — Generate Buildings/Clear Buildings buttons
 
 UNUSED SCRIPTS (Assets/Not Being Used/)
 WFCCityGenerator.cs, CityTileAdjacencyRule.cs
@@ -74,11 +76,16 @@ Edit Mode Gotchas:
 Key Methods:
   GetCellWorldCenter(cell)          — Single cell center in world space
   SnapToGrid(worldPos, size)        — Snap world pos to nearest cell
+  SnapToGrid(worldPos, sizeX, sizeZ)— Rectangular snap overload
   WorldToGrid(worldPos)             — World -> grid cell
-  IsAreaAvailable(cell, size)       — Check if cells are free
-  OccupyCells(cell, size)           — Mark cells occupied (temporary)
+  IsAreaAvailable(cell, size)       — Check if cells are free (square)
+  IsAreaAvailable(cell, sizeX, sizeZ)— Check if cells are free (rectangular)
+  OccupyCells(cell, size)           — Mark cells occupied (temporary, square)
+  OccupyCells(cell, sizeX, sizeZ)   — Mark cells occupied (temporary, rectangular)
   FreeCells(cell, size)             — Free cells (skips permanent)
-  OccupyCellsPermanent(cell, size)  — Mark cells permanent (roads/env)
+  FreeCells(cell, sizeX, sizeZ)     — Free cells (rectangular, skips permanent)
+  OccupyCellsPermanent(cell, size)  — Mark cells permanent (square, delegates to rectangular)
+  OccupyCellsPermanent(cell, sizeX, sizeZ) — Mark cells permanent (rectangular)
   IsCellPermanent(cell)             — Check if permanently blocked
 
 World Position Formula (used by BuildingPlacer, RoadGenerator):
@@ -127,12 +134,20 @@ INSPECTOR FIELDS:
   roadJitter          int            1           Range 0-2, subtle block size variation
   borderMargin        int            2           Cells from grid edge (1 block = 2 cells)
   randomSeed          int            0           0 = random each run
-  generateOnStart     bool           true        Auto-generate on Play
   fillEmptySpace      bool           true        Fill non-road areas
   debugYOffset        float          0.15        Extra Y above terrain
   lastComputedScale   float          readonly    Shows uniform scale applied to all tiles
 
-GENERATION FLOW:
+SCENE-VIEW-ONLY GENERATION:
+  RoadGenerator does NOT auto-generate at runtime (no generateOnStart).
+  Generation is done in Scene view via the Editor "Generate All" button.
+  At runtime, Start() calls MarkExistingObstaclesAtRuntime() instead:
+    - Scans all children by Renderer.bounds
+    - Skips empty space filler tiles (non-blocking, identified by emptySpace.tileName prefix)
+    - Converts bounds to grid cell ranges and calls OccupyCellsPermanent() per cell
+    - This ensures roads/rivers/mountains block the grid without regenerating
+
+GENERATION FLOW (Editor / Scene view only):
   1. CacheGridSettings() — reads gridWidth, gridHeight, cellSize from GridManager
   2. ClearMap() — destroys all children
   3. InitGrids() — creates roadMap, placedMap, and obstacleMap bool arrays
@@ -265,6 +280,113 @@ Custom Inspector with 3 buttons:
   Clear All (red)              — calls ClearMap()
   Log Prefab Scales (blue)     — calls LogPrefabScales()
 Shows grid info box when GridManager is assigned.
+
+================================================================================
+CITY GENERATION SYSTEM (CityGenerator.cs)
+================================================================================
+Procedurally places buildings on empty grid cells near roads.
+Generation is done in Scene view via Editor button — NOT at runtime.
+Attach to an empty GameObject, assign GridManager + RoadGenerator + BuildingData[].
+
+INSPECTOR FIELDS:
+  gridManager         GridManager     required    Reference to grid system
+  roadGenerator       RoadGenerator   required    Reference to road generator (reads children)
+  buildings           BuildingData[]  required    Array of building types to place (modular)
+  randomSeed          int             0           0 = random each run
+  density             int             20          Range 5-80, percentage of candidates to fill
+  roadProximity       int             2           Range 1-3, cells away from road to allow placement
+  debugYOffset        float           0.15        Extra Y above terrain
+
+GENERATION ALGORITHM (Generate):
+  1. CacheGridSettings()     — reads gridWidth, gridHeight, cellSize from GridManager
+  2. ClearMap()              — destroys all children (previously generated buildings)
+  3. InitGrids()             — creates occupiedMap[,] and roadCellMap[,] bool arrays
+  4. BuildOccupiedMap()      — scans RoadGenerator children by Renderer.bounds,
+                               marks their grid cells as occupied. Skips empty space
+                               filler tiles (identified by emptySpace.tileName prefix)
+  5. BuildRoadCellMap()      — scans RoadGenerator children (excluding River_, Mountain_,
+                               and empty space fillers) by Renderer.bounds to identify
+                               which grid cells contain actual road tiles
+  6. FindRoadAdjacentCells() — iterates entire grid, collects cells that are:
+                               (a) NOT occupied and (b) NOT road cells and
+                               (c) within roadProximity cells of a road cell
+  7. ShuffleList(candidates) — Fisher-Yates shuffle for random ordering
+  8. SelectBuildingTypes()   — picks random subset (min 3, max all) of assigned
+                               BuildingData types; different each seed
+  9. Placement loop          — iterates shuffled candidates up to density% cap:
+                               - picks random BuildingData from selected subset
+                               - picks random rotation (0/90/180/270)
+                               - swaps sizeX/sizeZ for 90/270 rotations
+                               - checks bounds + IsAreaFree()
+                               - calls PlaceBuilding() + MarkOccupied()
+
+BUILDING PLACEMENT (PlaceBuilding):
+  1. Compute world position: GetWorldPosition(cell, sx, sz)
+     Formula: x = origin.x + cell.x * cellSize + (sx * cellSize) * 0.5
+              z = origin.z + cell.y * cellSize + (sz * cellSize) * 0.5
+              y = terrain.SampleHeight() + terrain.position.y + debugYOffset
+  2. Instantiate prefab with rotation, parented under CityGenerator transform
+  3. AutoScaleToGrid — same algorithm as BuildingPlacer:
+     - Reset scale to Vector3.one
+     - Measure Renderer.bounds at scale 1
+     - Uniform scale = (max(targetX, targetZ) / max(boundsX, boundsZ)) * scaleMultiplier
+     - targetX = data.sizeX * cellSize, targetZ = data.sizeZ * cellSize
+  4. Bounds-based centering after scaling:
+     - offset = (position - bounds.center) for X/Z, (position - bounds.min) for Y
+     - shifts instance to center it on the target cell area with base on ground
+  5. Remove colliders (DestroyImmediate in editor)
+  6. Set layer to "Ignore Raycast"
+
+BUILDING TYPE SELECTION (SelectBuildingTypes):
+  - Filters null entries from the buildings[] array
+  - Picks a random count between min(3, total) and total
+  - Shuffles valid list, takes first 'count' entries
+  - Ensures variety: each seed gets a different subset of building types
+
+ROAD ADJACENCY DETECTION:
+  Rather than coupling to RoadGenerator's internal roadMap (private, transient),
+  the system scans RoadGenerator's instantiated children at generation time.
+  For each child, computes covered grid cells from Renderer.bounds:
+    minX = Floor((bounds.min.x - origin.x) / cellSize)
+    minZ = Floor((bounds.min.z - origin.z) / cellSize)
+    maxX = Ceil((bounds.max.x - origin.x) / cellSize)
+    maxZ = Ceil((bounds.max.z - origin.z) / cellSize)
+  Three categories of children are distinguished by name prefix:
+    - "River_*" and "Mountain_*" → obstacles, marked in occupiedMap only
+    - emptySpace.tileName prefix → non-blocking fillers, skipped entirely
+    - Everything else            → road tiles, marked in both occupiedMap AND roadCellMap
+
+EMPTY SPACE FILLER HANDLING:
+  Critical distinction: RoadGenerator's emptySpace tiles are NON-BLOCKING.
+  They fill visual gaps but players can place buildings on those cells.
+  Both CityGenerator and RoadGenerator's runtime marking skip these tiles:
+    - CityGenerator.BuildOccupiedMap() skips them (so buildings can be placed there)
+    - CityGenerator.BuildRoadCellMap() skips them (they aren't roads)
+    - RoadGenerator.MarkExistingObstaclesAtRuntime() skips them (don't block at runtime)
+  Identification: child.name.StartsWith(emptySpace.tileName)
+
+RUNTIME BEHAVIOR (Start):
+  No regeneration. Start() calls MarkExistingBuildingsAtRuntime():
+    - Scans all children by Renderer.bounds
+    - Converts bounds to grid cell ranges
+    - Calls OccupyCellsPermanent() per cell
+    - Generated buildings become permanent obstacles at runtime
+
+DENSITY CONTROL:
+  maxPlacements = max(1, (candidates.Count * density) / 100)
+  At density=20 with 5000 candidates, attempts up to 1000 placements.
+  Not all attempts succeed (buildings may not fit), so actual count < max.
+  Sparse placement is natural: large buildings consume many candidates,
+  and shuffled order prevents clustering.
+
+================================================================================
+EDITOR: CityGeneratorEditor.cs (Assets/Editor/)
+================================================================================
+Custom Inspector with 2 buttons:
+  Generate Buildings (green)  — calls Generate() (places buildings near roads)
+  Clear Buildings (red)       — calls ClearMap() (removes all generated buildings)
+Shows grid info box with grid size, cell size, and building count when GridManager assigned.
+Supports full Undo via Undo.RegisterFullObjectHierarchyUndo().
 
 ================================================================================
 IMPORTED ASSET PACKS (URP-converted)
