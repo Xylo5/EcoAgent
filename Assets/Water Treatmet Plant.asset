@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Water Treatmet Plant
   icon: {fileID: 0}
-  sizeInCells: 5
+  sizeX: 5
+  sizeZ: 5
   prefab: {fileID: 4900100287479819167, guid: a0a487818fc12b8478fa6efcb4f382bc, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}

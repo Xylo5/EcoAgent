@@ -166,17 +166,22 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector3 SnapToGrid(Vector3 worldPosition, int buildingSize = 1)
     {
+        return SnapToGrid(worldPosition, buildingSize, buildingSize);
+    }
+
+    public Vector3 SnapToGrid(Vector3 worldPosition, int bSizeX, int bSizeZ)
+    {
         float localX = worldPosition.x - GridOrigin.x;
         float localZ = worldPosition.z - GridOrigin.z;
 
         int cellX = Mathf.FloorToInt(localX / cellSize);
         int cellZ = Mathf.FloorToInt(localZ / cellSize);
 
-        cellX = Mathf.Clamp(cellX, 0, gridWidth - buildingSize);
-        cellZ = Mathf.Clamp(cellZ, 0, gridHeight - buildingSize);
+        cellX = Mathf.Clamp(cellX, 0, gridWidth - bSizeX);
+        cellZ = Mathf.Clamp(cellZ, 0, gridHeight - bSizeZ);
 
-        float snappedX = GridOrigin.x + cellX * cellSize + (buildingSize * cellSize) / 2f;
-        float snappedZ = GridOrigin.z + cellZ * cellSize + (buildingSize * cellSize) / 2f;
+        float snappedX = GridOrigin.x + cellX * cellSize + (bSizeX * cellSize) / 2f;
+        float snappedZ = GridOrigin.z + cellZ * cellSize + (bSizeZ * cellSize) / 2f;
         float snappedY = terrain != null ? terrain.SampleHeight(new Vector3(snappedX, 0, snappedZ)) + terrainOrigin.y : terrainOrigin.y;
 
         return new Vector3(snappedX, snappedY, snappedZ);
@@ -199,12 +204,17 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public Vector2Int GetBuildingGridCell(Vector3 buildingCenter, int buildingSize)
     {
-        float bottomLeftX = buildingCenter.x - (buildingSize * cellSize) / 2f;
-        float bottomLeftZ = buildingCenter.z - (buildingSize * cellSize) / 2f;
+        return GetBuildingGridCell(buildingCenter, buildingSize, buildingSize);
+    }
+
+    public Vector2Int GetBuildingGridCell(Vector3 buildingCenter, int bSizeX, int bSizeZ)
+    {
+        float bottomLeftX = buildingCenter.x - (bSizeX * cellSize) / 2f;
+        float bottomLeftZ = buildingCenter.z - (bSizeZ * cellSize) / 2f;
         int cellX = Mathf.RoundToInt((bottomLeftX - GridOrigin.x) / cellSize);
         int cellZ = Mathf.RoundToInt((bottomLeftZ - GridOrigin.z) / cellSize);
-        cellX = Mathf.Clamp(cellX, 0, gridWidth - buildingSize);
-        cellZ = Mathf.Clamp(cellZ, 0, gridHeight - buildingSize);
+        cellX = Mathf.Clamp(cellX, 0, gridWidth - bSizeX);
+        cellZ = Mathf.Clamp(cellZ, 0, gridHeight - bSizeZ);
         return new Vector2Int(cellX, cellZ);
     }
 
@@ -223,9 +233,14 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public bool IsAreaAvailable(Vector2Int startCell, int size)
     {
-        for (int x = startCell.x; x < startCell.x + size; x++)
+        return IsAreaAvailable(startCell, size, size);
+    }
+
+    public bool IsAreaAvailable(Vector2Int startCell, int sizeX, int sizeZ)
+    {
+        for (int x = startCell.x; x < startCell.x + sizeX; x++)
         {
-            for (int z = startCell.y; z < startCell.y + size; z++)
+            for (int z = startCell.y; z < startCell.y + sizeZ; z++)
             {
                 if (!IsCellAvailable(new Vector2Int(x, z)))
                     return false;
@@ -240,9 +255,14 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public bool IsAreaAvailable(Vector2Int startCell, int size, PlacedBuilding ignore)
     {
-        for (int x = startCell.x; x < startCell.x + size; x++)
+        return IsAreaAvailable(startCell, size, size, ignore);
+    }
+
+    public bool IsAreaAvailable(Vector2Int startCell, int sizeX, int sizeZ, PlacedBuilding ignore)
+    {
+        for (int x = startCell.x; x < startCell.x + sizeX; x++)
         {
-            for (int z = startCell.y; z < startCell.y + size; z++)
+            for (int z = startCell.y; z < startCell.y + sizeZ; z++)
             {
                 Vector2Int cell = new Vector2Int(x, z);
                 if (cell.x < 0 || cell.x >= gridWidth || cell.y < 0 || cell.y >= gridHeight)
@@ -266,9 +286,9 @@ public class GridManager : MonoBehaviour
     private bool IsCellOwnedBy(Vector2Int cell, PlacedBuilding building)
     {
         return cell.x >= building.gridCell.x &&
-               cell.x < building.gridCell.x + building.sizeInCells &&
+               cell.x < building.gridCell.x + building.sizeX &&
                cell.y >= building.gridCell.y &&
-               cell.y < building.gridCell.y + building.sizeInCells;
+               cell.y < building.gridCell.y + building.sizeZ;
     }
 
     /// <summary>
@@ -276,9 +296,14 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public void OccupyCells(Vector2Int startCell, int size)
     {
-        for (int x = startCell.x; x < startCell.x + size; x++)
+        OccupyCells(startCell, size, size);
+    }
+
+    public void OccupyCells(Vector2Int startCell, int sizeX, int sizeZ)
+    {
+        for (int x = startCell.x; x < startCell.x + sizeX; x++)
         {
-            for (int z = startCell.y; z < startCell.y + size; z++)
+            for (int z = startCell.y; z < startCell.y + sizeZ; z++)
             {
                 if (x >= 0 && x < gridWidth && z >= 0 && z < gridHeight)
                     occupiedCells[x, z] = true;
@@ -291,9 +316,14 @@ public class GridManager : MonoBehaviour
     /// </summary>
     public void FreeCells(Vector2Int startCell, int size)
     {
-        for (int x = startCell.x; x < startCell.x + size; x++)
+        FreeCells(startCell, size, size);
+    }
+
+    public void FreeCells(Vector2Int startCell, int sizeX, int sizeZ)
+    {
+        for (int x = startCell.x; x < startCell.x + sizeX; x++)
         {
-            for (int z = startCell.y; z < startCell.y + size; z++)
+            for (int z = startCell.y; z < startCell.y + sizeZ; z++)
             {
                 if (x >= 0 && x < gridWidth && z >= 0 && z < gridHeight && !permanentCells[x, z])
                     occupiedCells[x, z] = false;

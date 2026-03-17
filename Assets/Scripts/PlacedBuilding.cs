@@ -8,7 +8,8 @@ using UnityEngine;
 public class PlacedBuilding : MonoBehaviour
 {
     [HideInInspector] public Vector2Int gridCell;     // Bottom-left cell
-    [HideInInspector] public int sizeInCells;
+    [HideInInspector] public int sizeX;
+    [HideInInspector] public int sizeZ;
     [HideInInspector] public BuildingData buildingData;
 
     // For relocation — store original position in case cancel
@@ -30,7 +31,7 @@ public class PlacedBuilding : MonoBehaviour
         originalGridCell = gridCell;
 
         // Free the cells so they don't block the new placement check
-        gridManager.FreeCells(gridCell, sizeInCells);
+        gridManager.FreeCells(gridCell, sizeX, sizeZ);
 
         // Lift the building visually
         transform.position += Vector3.up * liftHeight;
@@ -46,7 +47,7 @@ public class PlacedBuilding : MonoBehaviour
         gridCell = newCell;
 
         // Occupy the new cells
-        gridManager.OccupyCells(gridCell, sizeInCells);
+        gridManager.OccupyCells(gridCell, sizeX, sizeZ);
     }
 
     /// <summary>
@@ -59,7 +60,7 @@ public class PlacedBuilding : MonoBehaviour
         gridCell = originalGridCell;
 
         // Re-occupy original cells
-        gridManager.OccupyCells(gridCell, sizeInCells);
+        gridManager.OccupyCells(gridCell, sizeX, sizeZ);
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public class PlacedBuilding : MonoBehaviour
     /// </summary>
     public void Demolish(GridManager gridManager)
     {
-        gridManager.FreeCells(gridCell, sizeInCells);
+        gridManager.FreeCells(gridCell, sizeX, sizeZ);
         Debug.Log($"Demolished {buildingData.buildingName} at ({gridCell.x}, {gridCell.y})");
         Destroy(gameObject);
     }

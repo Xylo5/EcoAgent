@@ -64,17 +64,17 @@ public class GridCellHighlighter : MonoBehaviour
     /// <summary>
     /// Shows cell highlights for a building footprint.
     /// </summary>
-    public void ShowHighlight(Vector2Int startCell, int size, PlacedBuilding ignoredBuilding = null)
+    public void ShowHighlight(Vector2Int startCell, int sizeX, int sizeZ, PlacedBuilding ignoredBuilding = null)
     {
         activeQuads = 0;
         float margin = 0.05f;
         float quadSize = gridManager.cellSize - margin * 2f;
 
-        for (int x = 0; x < size; x++)
+        for (int x = 0; x < sizeX; x++)
         {
-            for (int z = 0; z < size; z++)
+            for (int z = 0; z < sizeZ; z++)
             {
-                int idx = x * size + z;
+                int idx = x * sizeZ + z;
                 if (idx >= maxQuads) break;
 
                 Vector2Int cell = new Vector2Int(startCell.x + x, startCell.y + z);

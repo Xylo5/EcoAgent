@@ -30,16 +30,11 @@ public class BuildingUIWiring
                 allBuildings.Add(bd);
         }
 
-        // Sort by sizeInCells for a nice ordering in the UI
-        allBuildings = allBuildings.OrderBy(b => b.sizeInCells).ThenBy(b => b.buildingName).ToList();
+        // Sort by size for a nice ordering in the UI
+        allBuildings = allBuildings.OrderBy(b => b.sizeX * b.sizeZ).ThenBy(b => b.buildingName).ToList();
 
         // Find the BuildingUI component in the current scene
         BuildingUI buildingUI = Object.FindFirstObjectByType<BuildingUI>();
-        if (buildingUI == null)
-        {
-            // Fallback for older Unity versions
-            buildingUI = Object.FindObjectOfType<BuildingUI>();
-        }
 
         if (buildingUI == null)
         {

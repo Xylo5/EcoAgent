@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Defines a building type with its size and prefab (CoC-style).
-/// Buildings are always square (1x1, 2x2, 3x3, etc.) and don't rotate.
+/// Buildings can be rectangular (e.g., 7x9, 3x5) or square.
 /// Create instances via Assets > Create > Building > BuildingData.
 /// </summary>
 [CreateAssetMenu(fileName = "NewBuilding", menuName = "Building/BuildingData")]
@@ -12,9 +12,11 @@ public class BuildingData : ScriptableObject
     public string buildingName = "New Building";
     public Sprite icon; // UI icon for the building shop panel
 
-    [Header("Grid Size (square, in cells)")]
+    [Header("Grid Size (in cells)")]
     [Range(1, 15)]
-    public int sizeInCells = 1; // 1 = 1x1, 2 = 2x2, 3 = 3x3, etc.
+    public int sizeX = 1; // Width in cells (along X axis)
+    [Range(1, 15)]
+    public int sizeZ = 1; // Depth in cells (along Z axis)
 
     [Header("Prefab")]
     public GameObject prefab; // The 3D model prefab to instantiate

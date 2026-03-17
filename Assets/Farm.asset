@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Farm
   icon: {fileID: 0}
-  sizeInCells: 7
+  sizeX: 10
+  sizeZ: 10
   prefab: {fileID: 8460503563806827883, guid: e94774417d5f22a4099dd86262fc7094, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}

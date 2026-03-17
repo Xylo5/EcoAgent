@@ -73,9 +73,11 @@ public class SimplePolySetup : EditorWindow
         if (data != null && prefab != null)
         {
             data.prefab = prefab;
-            data.sizeInCells = CalculateSizeInCells(prefab);
+            int calcSize = CalculateSizeInCells(prefab);
+            data.sizeX = calcSize;
+            data.sizeZ = calcSize;
             EditorUtility.SetDirty(data);
-            Debug.Log($"Updated Building: {data.buildingName} -> Size {data.sizeInCells} ({prefab.name})");
+            Debug.Log($"Updated Building: {data.buildingName} -> Size {data.sizeX}x{data.sizeZ} ({prefab.name})");
         }
         else Debug.LogWarning($"Failed to update {assetPath} or {prefabPath}");
     }

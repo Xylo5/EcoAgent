@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Recycle Centre
   icon: {fileID: 0}
-  sizeInCells: 4
+  sizeX: 4
+  sizeZ: 4
   prefab: {fileID: 417376745555178095, guid: 785191dfca184a06b54f56a60bc6e979, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}

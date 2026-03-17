@@ -173,4 +173,10 @@ public class InputManager : MonoBehaviour
     public bool GetDownArrowHeld()  => kb != null && kb.downArrowKey.isPressed;
     public bool GetLeftArrowHeld()  => kb != null && kb.leftArrowKey.isPressed;
     public bool GetRightArrowHeld() => kb != null && kb.rightArrowKey.isPressed;
+
+    // ═══════════════════════════════════════════
+    //  BUILDING ROTATION
+    // ═══════════════════════════════════════════
+
+    public bool GetRotateBuildingDown() => kb != null && kb.rKey.wasPressedThisFrame;
 }

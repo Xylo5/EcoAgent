@@ -155,7 +155,7 @@ public class BuildingUI : MonoBehaviour
 
             TextMeshProUGUI btnText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             if (btnText != null)
-                btnText.text = building.buildingName + "\n(" + building.sizeInCells + "x" + building.sizeInCells + ")";
+                btnText.text = building.buildingName + "\n(" + building.sizeX + "x" + building.sizeZ + ")";
 
             buttonObjects[i] = btnObj;
             buttonImages[i] = btnObj.GetComponent<Image>();

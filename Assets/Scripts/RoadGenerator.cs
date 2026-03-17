@@ -276,12 +276,13 @@ public class RoadGenerator : MonoBehaviour
 
         Terrain t = gridManager.terrain;
         if (t == null) t = Terrain.activeTerrain;
-        float worldY = (t != null) ? t.transform.position.y + debugYOffset : origin.y;
+        float terrainBaseY = (t != null) ? t.transform.position.y : origin.y;
+        float worldY = terrainBaseY + 0.05f; // Sit just above terrain
 
         Vector3 pos = new Vector3(worldX, worldY, worldZ);
         Vector3 targetScale = new Vector3(
             widthCells * cellSize,
-            0.3f,
+            0.02f,
             heightCells * cellSize
         );
 
@@ -302,7 +303,8 @@ public class RoadGenerator : MonoBehaviour
                 float scaleX = nativeSize.x > 0.01f ? targetScale.x / nativeSize.x : 1f;
                 float scaleZ = nativeSize.z > 0.01f ? targetScale.z / nativeSize.z : 1f;
                 Vector3 orig = river.transform.localScale;
-                river.transform.localScale = new Vector3(orig.x * scaleX, orig.y * scaleX, orig.z * scaleZ);
+                float scaleY = nativeSize.y > 0.01f ? targetScale.y / nativeSize.y : 1f;
+                river.transform.localScale = new Vector3(orig.x * scaleX, orig.y * scaleY, orig.z * scaleZ);
 
                 // Bounds-based centering
                 Vector3 offset = b.center - pos;
@@ -607,16 +609,21 @@ public class RoadGenerator : MonoBehaviour
                         {
                             tile = roadStart;
                             placedAnyStart = true;
+                            // roadStart: rotated back 90 from aligned
+                            if (hasN) rot = 270f;
+                            else if (hasE) rot = 0f;
+                            else if (hasS) rot = 90f;
+                            else rot = 180f;
                         }
                         else
                         {
                             tile = roadEnd;
+                            // roadEnd: cap facing away from neighbor
+                            if (hasN) rot = 180f;
+                            else if (hasE) rot = 270f;
+                            else if (hasS) rot = 0f;
+                            else rot = 90f;
                         }
-                        // Point away from the neighbor (open end faces outward)
-                        if (hasN) rot = 270f;
-                        else if (hasE) rot = 0f;
-                        else if (hasS) rot = 90f;
-                        else rot = 180f;
                         break;
 
                     case 2:

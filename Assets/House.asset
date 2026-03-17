@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: House
   icon: {fileID: 0}
-  sizeInCells: 7
+  sizeX: 4
+  sizeZ: 4
   prefab: {fileID: 100000, guid: 92dcd407350173049ab8c86482fadf42, type: 3}
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
