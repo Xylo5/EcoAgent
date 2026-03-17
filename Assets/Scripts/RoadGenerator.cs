@@ -50,7 +50,6 @@ public class RoadGenerator : MonoBehaviour
 
     [Header("General")]
     public int randomSeed = 0;
-    public bool generateOnStart = true;
     public bool fillEmptySpace = true;
 
     [Header("Debug")]
@@ -69,8 +68,11 @@ public class RoadGenerator : MonoBehaviour
 
     void Start()
     {
-        if (generateOnStart)
-            Generate();
+        // Generation is done in Scene view via the Editor button.
+        // At runtime, just mark existing obstacle cells as permanent
+        // so the grid knows they are occupied.
+        if (gridManager != null)
+            MarkExistingObstaclesAtRuntime();
     }
 
     // ──────────────────────────────────────────────
@@ -861,5 +863,43 @@ public class RoadGenerator : MonoBehaviour
         obj.layer = layer;
         foreach (Transform child in obj.transform)
             SetLayerRecursive(child.gameObject, layer);
+    }
+
+    /// <summary>
+    /// At runtime, scans all children (placed in Scene view) and marks
+    /// their grid cells as permanently occupied so the building placer
+    /// knows those cells are taken.
+    /// </summary>
+    private void MarkExistingObstaclesAtRuntime()
+    {
+        CacheGridSettings();
+        Vector3 origin = gridManager.GridOrigin;
+
+        foreach (Transform child in transform)
+        {
+            Renderer[] renderers = child.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) continue;
+
+            Bounds b = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                b.Encapsulate(renderers[i].bounds);
+
+            // Convert world bounds to grid cell range
+            int minX = Mathf.FloorToInt((b.min.x - origin.x) / cellSize);
+            int minZ = Mathf.FloorToInt((b.min.z - origin.z) / cellSize);
+            int maxX = Mathf.CeilToInt((b.max.x - origin.x) / cellSize);
+            int maxZ = Mathf.CeilToInt((b.max.z - origin.z) / cellSize);
+
+            minX = Mathf.Max(minX, 0);
+            minZ = Mathf.Max(minZ, 0);
+            maxX = Mathf.Min(maxX, gridWidth);
+            maxZ = Mathf.Min(maxZ, gridHeight);
+
+            for (int x = minX; x < maxX; x++)
+                for (int z = minZ; z < maxZ; z++)
+                    gridManager.OccupyCellsPermanent(new Vector2Int(x, z), 1);
+        }
+
+        Debug.Log($"[RoadGenerator] Marked existing scene objects as permanent ({transform.childCount} children).");
     }
 }
