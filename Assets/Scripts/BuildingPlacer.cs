@@ -390,6 +390,10 @@ public class BuildingPlacer : MonoBehaviour
 
         AutoScaleToGrid(building, currentBuildingData);
 
+        // Play rise-from-ground animation
+        var anim = building.AddComponent<BuildingPlaceAnimation>();
+        anim.Play(building.transform.position, building.transform.localScale);
+
         PlacedBuilding pb = building.AddComponent<PlacedBuilding>();
         pb.gridCell = ghostGridCell;
         pb.sizeX = sx;

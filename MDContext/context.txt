@@ -14,6 +14,7 @@ GridManager.cs          — 100x100 grid, cell occupancy, snap-to-grid, manual p
 RoadGenerator.cs        — Procedural road network with 9 tile types + river/mountain generation
 CityGenerator.cs        — Procedural building placement near roads (scene-view only)
 BuildingPlacer.cs       — Mouse-based building placement on grid
+BuildingPlaceAnimation.cs — Rise-from-ground placement anim + dust particles + sound hook
 BorderForestSpawner.cs  — Decorative trees around grid border
 EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
 CityTileData.cs         — ScriptableObject: tileName, sizeInCells, prefabs[]
