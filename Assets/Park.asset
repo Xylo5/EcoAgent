@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: Park
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Park
+  description: Major air purification, reduces urban heat island effect, and enhances
+    biodiversity.
   icon: {fileID: 0}
   sizeX: 8
   sizeZ: 8
   prefab: {fileID: 5553909407216072623, guid: 66e394cffbf1c47429e7f49bad90a3d4, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: -90
+  frequency: 1

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: House
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: House
-  description: A useful building for your city.
+  description: Basic living unit. impact depends on energy use and density.
   icon: {fileID: 0}
   sizeX: 4
   sizeZ: 4

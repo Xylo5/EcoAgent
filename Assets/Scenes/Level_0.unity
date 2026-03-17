@@ -19946,6 +19946,56 @@ Transform:
   - {fileID: 519833034}
   m_Father: {fileID: 1415586793}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!1 &80830284
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 80830286}
+  - component: {fileID: 80830285}
+  m_Layer: 0
+  m_Name: TerrainEdgeFog
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &80830285
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 80830284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5364922f5fa2ee04a9711315323acc70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TerrainEdgeFog
+  terrain: {fileID: 1143838858}
+  fogColor: {r: 0.76889277, g: 0.77360773, b: 0.8037735, a: 1}
+  fogWidth: 200
+  fogDensity: 1
+  yOffset: 1
+  fogHeight: 15
+--- !u!4 &80830286
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 80830284}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 51.33462, y: 0, z: 112.45306}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &80862545
 GameObject:
   m_ObjectHideFlags: 0
@@ -79036,7 +79086,7 @@ MonoBehaviour:
   gridColumns: 4
   normalColor: {r: 1, g: 0.9333334, b: 0.5490196, a: 1}
   selectedColor: {r: 0.1, g: 0.6, b: 0.1, a: 1}
-  tooltipDelay: 2
+  tooltipDelay: 1
 --- !u!114 &317031299
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -552855,3 +552905,4 @@ SceneRoots:
   - {fileID: 746194371}
   - {fileID: 1631707935}
   - {fileID: 1840471872}
+  - {fileID: 80830286}

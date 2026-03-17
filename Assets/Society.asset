@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: Society
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Society
+  description: Efficient land use but increases population density, leading to higher
+    resource consumption and waste.
   icon: {fileID: 0}
   sizeX: 12
   sizeZ: 12
   prefab: {fileID: 208349291983114214, guid: 529a81d3bd814754aaf424da7111fdab, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 55
+  frequency: 1

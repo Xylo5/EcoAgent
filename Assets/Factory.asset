@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Factory
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Factory
-  description: A useful building for your city.
+  description: Major source of pollution (air, water, and soil) and high carbon emissions.
   icon: {fileID: 0}
   sizeX: 7
   sizeZ: 9

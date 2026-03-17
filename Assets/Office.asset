@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Office
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Office
-  description: A useful building for your city.
+  description: High energy consumption (electricity, AC), contributes to emissions.
   icon: {fileID: 0}
   sizeX: 6
   sizeZ: 6

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Hospital
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Hospital
-  description: A useful building for your city.
+  description: Improves public health but consumes high energy and produces biomedical
+    waste.
   icon: {fileID: 0}
   sizeX: 6
   sizeZ: 6

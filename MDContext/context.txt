@@ -24,6 +24,8 @@ CameraController.cs     — Camera movement
 PlacedBuilding.cs       — Tracks placed building state
 PollutionManager.cs     — Pollution system with opaque HUD background
 CityGenerator.cs        — Procedural city builder: 2-phase generation, frequency weighting, density curve
+TerrainEdgeFog.cs       — Runtime fog quads around terrain edges (uses Custom/EdgeFog shader)
+EdgeFog.shader          — URP transparent unlit shader for terrain edge fog (Assets/Shaders/)
 RequiredBuildingsUI.cs  — "REQUIRED" button + expandable checklist + map scan for required buildings
 BuildingUI.cs           — Building selection UI: centered 4-col grid layout + 2s hover tooltip
 LevelHUD.cs             — In-game HUD with Check + Required buttons, gates win on buildings + pollution

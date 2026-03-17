@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gas Station
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Gas Station
-  description: A useful building for your city.
+  description: Promotes fossil fuel usage, increases air pollution and carbon emissions
   icon: {fileID: 0}
   sizeX: 3
   sizeZ: 5

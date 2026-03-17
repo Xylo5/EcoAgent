@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: Hut
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Hut
+  description: Low resource consumption and minimal environmental footprint, but
+    limited efficiency.
   icon: {fileID: 0}
   sizeX: 4
   sizeZ: 4
   prefab: {fileID: 100000, guid: 4dc7028a3a83758439585b7c7c98cb27, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 50
+  frequency: 1
