@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
@@ -30,12 +31,27 @@ public class PollutionManager : MonoBehaviour
         // Force the text to top-center of the screen
         if (pollutionText != null)
         {
+            // Create an opaque background panel behind the text
+            GameObject bgObj = new GameObject("PollutionBG");
+            bgObj.transform.SetParent(pollutionText.transform.parent, false);
+
+            Image bgImage = bgObj.AddComponent<Image>();
+            bgImage.color = new Color(0.1f, 0.1f, 0.14f, 0.85f);
+
+            RectTransform bgRt = bgObj.GetComponent<RectTransform>();
+            bgRt.anchorMin = new Vector2(0.5f, 1f);
+            bgRt.anchorMax = new Vector2(0.5f, 1f);
+            bgRt.pivot = new Vector2(0.5f, 1f);
+            bgRt.anchoredPosition = new Vector2(0f, -6f);
+            bgRt.sizeDelta = new Vector2(320f, 50f);
+
+            // Re-parent the text under the background so it renders on top
+            pollutionText.transform.SetParent(bgObj.transform, false);
             RectTransform rt = pollutionText.rectTransform;
-            rt.anchorMin = new Vector2(0.5f, 1f);
-            rt.anchorMax = new Vector2(0.5f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.anchoredPosition = new Vector2(0f, -10f);
-            rt.sizeDelta = new Vector2(300f, 50f);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.sizeDelta = Vector2.zero;
+            rt.anchoredPosition = Vector2.zero;
             pollutionText.alignment = TextAlignmentOptions.Center;
             pollutionText.fontSize = 28;
         }

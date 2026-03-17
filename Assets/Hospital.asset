@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: Hospital
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Hospital
+  description: A useful building for your city.
   icon: {fileID: 0}
   sizeX: 6
   sizeZ: 6
   prefab: {fileID: 363025940278517486, guid: eb1a3f979ef5c8743a26ef5a30ec6511, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 70
+  frequency: 3

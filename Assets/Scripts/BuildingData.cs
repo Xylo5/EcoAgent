@@ -10,6 +10,9 @@ public class BuildingData : ScriptableObject
 {
     [Header("Building Info")]
     public string buildingName = "New Building";
+    [TextArea(2, 5)]
+    [Tooltip("Description shown in the building shop tooltip on hover.")]
+    public string description = "A useful building for your city.";
     public Sprite icon; // UI icon for the building shop panel
 
     [Header("Grid Size (in cells)")]
@@ -33,4 +36,9 @@ public class BuildingData : ScriptableObject
     [Header("Environment Impact")]
     [Tooltip("Pollution value. Positive = pollutes, Negative = cleans/absorbs pollution.")]
     public int pollutionValue = 0;
+
+    [Header("City Generation")]
+    [Range(1, 10)]
+    [Tooltip("Spawn frequency weight for CityGenerator. Higher = more copies generated. Each type spawns at least once.")]
+    public int frequency = 1;
 }

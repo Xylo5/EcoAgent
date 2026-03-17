@@ -107,6 +107,7 @@ public class BuildingPlaceAnimation : MonoBehaviour
         dustGO.transform.position = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
 
         ParticleSystem ps = dustGO.AddComponent<ParticleSystem>();
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); // Stop auto-play so we can configure
         var main = ps.main;
         main.duration = 0.5f;
         main.startLifetime = 0.6f;

@@ -18,13 +18,14 @@ BuildingPlaceAnimation.cs — Rise-from-ground placement anim + dust particles +
 BorderForestSpawner.cs  — Decorative trees around grid border
 EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
 CityTileData.cs         — ScriptableObject: tileName, sizeInCells, prefabs[]
-BuildingData.cs         — ScriptableObject for building definitions
+BuildingData.cs         — ScriptableObject for building definitions (name, description, size, pollution, prefab, frequency)
 LevelRequirements.cs    — ScriptableObject: per-level required BuildingData[] list
 CameraController.cs     — Camera movement
 PlacedBuilding.cs       — Tracks placed building state
-PollutionManager.cs     — Pollution system
+PollutionManager.cs     — Pollution system with opaque HUD background
+CityGenerator.cs        — Procedural city builder: 2-phase generation, frequency weighting, density curve
 RequiredBuildingsUI.cs  — "REQUIRED" button + expandable checklist + map scan for required buildings
-BuildingUI.cs           — Building selection UI
+BuildingUI.cs           — Building selection UI: centered 4-col grid layout + 2s hover tooltip
 LevelHUD.cs             — In-game HUD with Check + Required buttons, gates win on buildings + pollution
 MainMenuUI.cs           — Main menu
 PlacementConfirmUI.cs   — Confirm/cancel building placement
@@ -497,6 +498,135 @@ INPUT SYSTEM NOTE:
   Project uses new Input System package (not legacy UnityEngine.Input).
   UI EventSystem must use InputSystemUIInputModule, NOT StandaloneInputModule.
   StandaloneInputModule causes InvalidOperationException at runtime.
+
+================================================================================
+CITY GENERATOR (CityGenerator.cs)
+================================================================================
+Procedurally places buildings on the grid near roads in Scene view (editor only).
+Generation via Editor button (CityGeneratorEditor.cs) — NOT at runtime.
+At runtime, only marks existing children as permanently occupied.
+
+INSPECTOR FIELDS:
+  gridManager        GridManager      reference
+  roadGenerator      RoadGenerator    reference
+  buildings          BuildingData[]   all building types to use
+  randomSeed         int              0 = random each time, else deterministic
+  density            int (5-80)       how densely to fill the city
+  roadProximity      int (1-3)        max cells away from road a building can be placed
+  debugYOffset       float            extra Y offset above terrain
+
+GENERATION ALGORITHM (two phases):
+  Phase 1 — Guaranteed Placement:
+    Iterates through every building type in the array.
+    For each type, finds the first available candidate cell and places one instance.
+    Ensures every assigned building type appears at least once in the city.
+
+  Phase 2 — Frequency-Weighted Fill:
+    Fills remaining slots up to maxPlacements using weighted random selection.
+    A weighted pool is built from BuildingData.frequency (1-10).
+    A building with frequency=5 is 5× more likely to spawn than frequency=1.
+
+DENSITY CURVE (quadratic, not linear):
+  Old formula: maxPlacements = candidates × density / 100  (barely noticeable change)
+  New formula: t = (density-5)/75; fraction = t² × 0.7 + t × 0.02
+    density  5 → ~2% fill
+    density 20 → ~7% fill
+    density 40 → ~25% fill
+    density 60 → ~45% fill
+    density 80 → ~70% fill
+  Minimum placements = number of building types (so all types always fit).
+
+CANDIDATE CELLS:
+  Only empty cells within roadProximity of a road cell are considered.
+  Candidates are shuffled before iteration for variety.
+  Occupied map includes road/river/mountain cells from RoadGenerator.
+
+BUILDING DATA — frequency field (BuildingData.cs):
+  [Range(1, 10)] public int frequency = 1
+  Editable per building asset in Inspector under "City Generation" header.
+  Higher value = more copies spawned during Phase 2.
+  Every type always spawns at least once regardless of frequency.
+
+================================================================================
+POLLUTION UI (PollutionManager.cs)
+================================================================================
+Singleton (PollutionManager.Instance). Tracks total pollution, starts at 100.
+
+UI DISPLAY:
+  pollutionText      TextMeshProUGUI   Inspector reference to the text element
+  At runtime, creates a dark opaque background panel ("PollutionBG") behind the text:
+    - Color: (0.1, 0.1, 0.14, 0.85)
+    - Size: 320×50, anchored top-center, 6px from top
+    - Text is re-parented under the background so it renders on top
+
+COLOR CODING:
+  pollution < 0   → green (0.2, 0.8, 0.2)
+  pollution < 50  → yellow (1, 0.8, 0)
+  pollution >= 50 → red (1, 0.2, 0.2)
+
+PUBLIC API:
+  AddPollution(int amount) — called by BuildingPlacer after placement
+  GetPollution()           — returns current pollution (used by LevelHUD.OnCheck)
+
+================================================================================
+BUILDING SHOP UI (BuildingUI.cs)
+================================================================================
+Two-level building shop: fixed "Buildings" button (top-right) toggles a centered
+grid panel. After placing a building, the panel closes.
+
+SCENE LOCATION:
+  The working BuildingUI component lives on the "Canvas" GameObject (NOT the
+  empty "BuildingUI" GameObject). The "BuildingUI" GO in the hierarchy has an
+  empty copy of the script with no references — it does nothing.
+  Always select "Canvas" in the hierarchy to edit BuildingUI references.
+
+INSPECTOR FIELDS (on Canvas):
+  buildingPlacer     BuildingPlacer    reference to the placer
+  buildings          BuildingData[]    14 building assets (fully populated)
+  shopPanel          GameObject        the shop panel (child of Canvas)
+  buttonContainer    Transform         parent for grid buttons (child of Canvas)
+  buttonPrefab       GameObject        ShopButton.prefab (Assets/Scenes/Prefabs/)
+  gridColumns        int               4 (columns in the grid)
+  normalColor        Color             button default color (serialized — must change in Inspector)
+  selectedColor      Color             button hover/selected color
+  tooltipDelay       float             2.0 seconds hover delay before tooltip appears
+
+GRID LAYOUT (code-generated in Start via SetupGridLayout):
+  - Replaces any existing LayoutGroup with GridLayoutGroup at runtime
+  - 4 columns, cellSize 145×75, spacing 14px, padding 15px
+  - Panel centered on screen (anchored 0.5/0.5)
+  - Panel auto-sizes to fit at least 3 rows (room for future buildings)
+  - Dark semi-transparent background (0.12, 0.12, 0.16, 0.95)
+
+BUTTONS:
+  - Each button shows: "<buildingName>\n(<sizeX>x<sizeZ>)"
+  - EventTrigger: PointerEnter (hover highlight + start tooltip timer),
+    PointerExit (reset timer + hide tooltip), PointerClick (select building)
+  - Keyboard: Tab/Shift+Tab cycles, Enter selects, Escape closes
+
+HOVER TOOLTIP:
+  - After hovering a button for 2 seconds, a tooltip panel appears to its right
+  - Tooltip shows: building name (bold), size, pollution value (green/red), description
+  - Opaque dark background (0.08, 0.08, 0.12, 0.98) so text is readable over grid
+  - Auto-sizes height based on text content
+  - Disappears instantly when mouse leaves the button
+
+BUILDING DATA (BuildingData.cs) — description field:
+  [TextArea(2, 5)] public string description
+  Editable per building asset in the Inspector.
+  Default: "A useful building for your city."
+  Used by tooltip to display building information.
+
+SERIALIZATION NOTE:
+  normalColor and selectedColor are serialized Inspector fields. Changing their
+  default values in code does NOT update existing scene instances. To change
+  colors, edit them directly on the Canvas > BuildingUI component in the Inspector.
+  Grid cell size, spacing, and panel size are hardcoded in SetupGridLayout() and
+  always apply at runtime regardless of serialized data.
+
+PUBLIC API (called by BuildingPlacer):
+  HideShop()   — closes the submenu
+  ShowShop()   — also closes the submenu (user must click "Buildings" to reopen)
 
 ================================================================================
 IMPORTED ASSET PACKS (URP-converted)

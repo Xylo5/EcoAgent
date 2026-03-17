@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: Factory
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Factory
+  description: A useful building for your city.
   icon: {fileID: 0}
   sizeX: 7
   sizeZ: 9
   prefab: {fileID: 100000, guid: f6674c1362ba984468bc1e71a2323d66, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 100
+  frequency: 5

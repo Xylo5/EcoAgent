@@ -5,6 +5,15 @@ using System.Collections.Generic;
 /// Procedurally places buildings on the grid near roads.
 /// Generation is done in Scene view via Editor button — not at runtime.
 /// Attach to an empty GameObject and assign references in Inspector.
+///
+/// GENERATION RULES:
+///   1. Every building type in the array is placed at least once (guaranteed).
+///   2. Remaining slots are filled using weighted random (BuildingData.frequency).
+///   3. Density slider (5–80) controls how many buildings are placed total.
+///      Uses a curve to make the slider feel more responsive:
+///        - Low density (5-20): sparse city
+///        - Mid density (30-50): moderate fill
+///        - High density (60-80): packed city
 /// </summary>
 public class CityGenerator : MonoBehaviour
 {
@@ -18,7 +27,7 @@ public class CityGenerator : MonoBehaviour
     [Header("Generation Settings")]
     public int randomSeed = 0;
     [Range(5, 80)]
-    [Tooltip("Percentage of road-adjacent candidate cells to attempt filling.")]
+    [Tooltip("How densely to fill the city. Uses a curve so the slider is more responsive.")]
     public int density = 20;
     [Range(1, 3)]
     [Tooltip("How many cells away from a road a building can be placed.")]
@@ -63,42 +72,96 @@ public class CityGenerator : MonoBehaviour
         Debug.Log($"[CityGenerator] Found {candidates.Count} candidate cells near roads.");
         ShuffleList(candidates);
 
-        // Pick a random subset of building types for this seed
-        BuildingData[] selectedTypes = SelectBuildingTypes();
-        if (selectedTypes.Length == 0)
+        // Validate building list
+        List<BuildingData> validBuildings = new List<BuildingData>();
+        foreach (var b in buildings)
+            if (b != null) validBuildings.Add(b);
+
+        if (validBuildings.Count == 0)
         {
-            Debug.LogWarning("[CityGenerator] No buildings assigned or selected.");
+            Debug.LogWarning("[CityGenerator] No buildings assigned.");
             return;
         }
 
-        int maxPlacements = Mathf.Max(1, (candidates.Count * density) / 100);
-        int placed = 0;
+        // Calculate total placements using a curve for more responsive density
+        // At density=5 → ~2%, at density=40 → ~25%, at density=80 → ~70%
+        float t = (density - 5f) / 75f; // normalize 5-80 to 0-1
+        float curvedFraction = t * t * 0.7f + t * 0.02f; // quadratic curve
+        int maxPlacements = Mathf.Max(validBuildings.Count, Mathf.RoundToInt(candidates.Count * curvedFraction));
 
-        for (int i = 0; i < candidates.Count && placed < maxPlacements; i++)
+        Debug.Log($"[CityGenerator] Density {density}% → target {maxPlacements} placements (out of {candidates.Count} candidates).");
+
+        // ── PHASE 1: Guarantee at least one of each building type ──
+        int placed = 0;
+        int candidateIdx = 0;
+        bool[] typePlaced = new bool[validBuildings.Count];
+
+        for (int typeIdx = 0; typeIdx < validBuildings.Count && candidateIdx < candidates.Count; typeIdx++)
+        {
+            BuildingData data = validBuildings[typeIdx];
+            bool success = false;
+
+            // Scan forward through candidates to find a spot for this type
+            for (int scan = candidateIdx; scan < candidates.Count; scan++)
+            {
+                Vector2Int cell = candidates[scan];
+                int rotStep = Random.Range(0, 4);
+                int sx = (rotStep % 2 == 0) ? data.sizeX : data.sizeZ;
+                int sz = (rotStep % 2 == 0) ? data.sizeZ : data.sizeX;
+
+                if (cell.x + sx > gridWidth || cell.y + sz > gridHeight)
+                    continue;
+                if (!IsAreaFree(cell, sx, sz))
+                    continue;
+
+                PlaceBuilding(cell, data, rotStep, sx, sz);
+                MarkOccupied(cell, sx, sz);
+                placed++;
+                typePlaced[typeIdx] = true;
+                success = true;
+
+                // Swap this candidate to the used section
+                candidates[scan] = candidates[candidateIdx];
+                candidateIdx++;
+                break;
+            }
+
+            if (!success)
+                Debug.LogWarning($"[CityGenerator] Could not find space for guaranteed placement of '{data.buildingName}'.");
+        }
+
+        Debug.Log($"[CityGenerator] Phase 1: Guaranteed placement — {placed} buildings (one per type).");
+
+        // ── PHASE 2: Fill remaining slots using weighted random ──
+        // Build weighted pool based on frequency
+        List<BuildingData> weightedPool = new List<BuildingData>();
+        foreach (var b in validBuildings)
+        {
+            int freq = Mathf.Max(1, b.frequency);
+            for (int f = 0; f < freq; f++)
+                weightedPool.Add(b);
+        }
+
+        for (int i = candidateIdx; i < candidates.Count && placed < maxPlacements; i++)
         {
             Vector2Int cell = candidates[i];
-            BuildingData data = selectedTypes[Random.Range(0, selectedTypes.Length)];
+            BuildingData data = weightedPool[Random.Range(0, weightedPool.Count)];
 
-            // Random rotation (0, 90, 180, 270)
             int rotStep = Random.Range(0, 4);
             int sx = (rotStep % 2 == 0) ? data.sizeX : data.sizeZ;
             int sz = (rotStep % 2 == 0) ? data.sizeZ : data.sizeX;
 
-            // Check bounds
             if (cell.x + sx > gridWidth || cell.y + sz > gridHeight)
                 continue;
-
-            // Check if area is free
             if (!IsAreaFree(cell, sx, sz))
                 continue;
 
-            // Place building
             PlaceBuilding(cell, data, rotStep, sx, sz);
             MarkOccupied(cell, sx, sz);
             placed++;
         }
 
-        Debug.Log($"[CityGenerator] Done. Placed {placed} buildings (density {density}%, seed {randomSeed}).");
+        Debug.Log($"[CityGenerator] Done. Placed {placed} buildings total (density {density}%, seed {randomSeed}).");
     }
 
     public void ClearMap()
@@ -272,45 +335,6 @@ public class CityGenerator : MonoBehaviour
             }
         }
         return false;
-    }
-
-    // ──────────────────────────────────────────────
-    //  Building Type Selection
-    // ──────────────────────────────────────────────
-
-    /// <summary>
-    /// Randomly selects a subset of assigned building types for this seed.
-    /// Picks between 3 and all assigned types, ensuring variety across seeds.
-    /// </summary>
-    private BuildingData[] SelectBuildingTypes()
-    {
-        if (buildings == null || buildings.Length == 0)
-            return new BuildingData[0];
-
-        // Filter out nulls
-        List<BuildingData> valid = new List<BuildingData>();
-        foreach (var b in buildings)
-            if (b != null) valid.Add(b);
-
-        if (valid.Count == 0)
-            return new BuildingData[0];
-
-        // Pick a random subset: minimum 3, maximum all
-        int minTypes = Mathf.Min(3, valid.Count);
-        int count = Random.Range(minTypes, valid.Count + 1);
-
-        // Shuffle and take first 'count'
-        ShuffleList(valid);
-        BuildingData[] selected = new BuildingData[count];
-        for (int i = 0; i < count; i++)
-            selected[i] = valid[i];
-
-        string names = "";
-        foreach (var s in selected)
-            names += s.buildingName + ", ";
-        Debug.Log($"[CityGenerator] Selected {count} building types: {names.TrimEnd(',', ' ')}");
-
-        return selected;
     }
 
     // ──────────────────────────────────────────────

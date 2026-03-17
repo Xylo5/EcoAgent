@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: Gas Station
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Gas Station
+  description: A useful building for your city.
   icon: {fileID: 0}
   sizeX: 3
   sizeZ: 5
   prefab: {fileID: 100000, guid: 260808cfd9b21994d8c3007a7bc9934c, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 95
+  frequency: 2
