@@ -18,7 +18,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   sizeX: 8
   sizeZ: 8
-  prefab: {fileID: 5553909407216072623, guid: 66e394cffbf1c47429e7f49bad90a3d4, type: 3}
+  prefab: {fileID: 3569189689274469721, guid: 074669bd8be09b245aa232afa23fd3f6, type: 3}
   scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}

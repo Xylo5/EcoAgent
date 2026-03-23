@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Office
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingName: Office
-  description: High energy consumption (electricity, AC), contributes to emissions.
   icon: {fileID: 0}
   sizeX: 6
   sizeZ: 6
@@ -22,4 +21,3 @@ MonoBehaviour:
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
   pollutionValue: 75
-  frequency: 5

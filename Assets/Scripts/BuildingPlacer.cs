@@ -490,11 +490,18 @@ public class BuildingPlacer : MonoBehaviour
 
         if (ghostObject == null) return;
 
-        Renderer[] renderers = ghostObject.GetComponentsInChildren<Renderer>(true);
-        if (renderers == null || renderers.Length == 0) return;
+        Renderer[] allRenderers = ghostObject.GetComponentsInChildren<Renderer>(true);
+        // Exclude ParticleSystemRenderer so particle effects don't skew bounds
+        System.Collections.Generic.List<Renderer> renderers = new System.Collections.Generic.List<Renderer>();
+        foreach (Renderer r in allRenderers)
+        {
+            if (!(r is ParticleSystemRenderer))
+                renderers.Add(r);
+        }
+        if (renderers.Count == 0) return;
 
         Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
+        for (int i = 1; i < renderers.Count; i++)
             bounds.Encapsulate(renderers[i].bounds);
 
         // Center X/Z on the grid cell, bottom-align Y so the model sits on the ground.
@@ -512,11 +519,18 @@ public class BuildingPlacer : MonoBehaviour
         // Reset to prefab's default scale first
         obj.transform.localScale = Vector3.one;
 
-        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>(true);
-        if (renderers == null || renderers.Length == 0) return;
+        Renderer[] allRenderers = obj.GetComponentsInChildren<Renderer>(true);
+        // Exclude ParticleSystemRenderer so particle effects don't skew bounds
+        System.Collections.Generic.List<Renderer> renderers = new System.Collections.Generic.List<Renderer>();
+        foreach (Renderer r in allRenderers)
+        {
+            if (!(r is ParticleSystemRenderer))
+                renderers.Add(r);
+        }
+        if (renderers.Count == 0) return;
 
         Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
+        for (int i = 1; i < renderers.Count; i++)
             bounds.Encapsulate(renderers[i].bounds);
 
         float modelX = bounds.size.x;
