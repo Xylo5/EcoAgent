@@ -3,10 +3,16 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Tracks total pollution in the level.
+/// Tracks total pollution (AQI) in the level.
 /// Starts at 100 and updates whenever a building is placed.
 /// Positive pollutionValue on a building increases the counter,
-/// negative pollutionValue decreases it.
+/// negative pollutionValue decreases it. Clamped to minimum 0.
+///
+/// AQI Color Ranges:
+///   0–40  → Green
+///   41–70 → Yellow
+///   71–120 → Orange
+///   121+  → Red
 /// </summary>
 public class PollutionManager : MonoBehaviour
 {
@@ -19,11 +25,12 @@ public class PollutionManager : MonoBehaviour
     public TextMeshProUGUI pollutionText;
 
     private int currentPollution;
+    private Image bgImage;
 
     void Awake()
     {
         Instance = this;
-        currentPollution = startingPollution;
+        currentPollution = Mathf.Max(0, startingPollution);
     }
 
     void Start()
@@ -35,7 +42,7 @@ public class PollutionManager : MonoBehaviour
             GameObject bgObj = new GameObject("PollutionBG");
             bgObj.transform.SetParent(pollutionText.transform.parent, false);
 
-            Image bgImage = bgObj.AddComponent<Image>();
+            bgImage = bgObj.AddComponent<Image>();
             bgImage.color = new Color(0.1f, 0.1f, 0.14f, 0.85f);
 
             RectTransform bgRt = bgObj.GetComponent<RectTransform>();
@@ -60,7 +67,7 @@ public class PollutionManager : MonoBehaviour
 
     public void AddPollution(int amount)
     {
-        currentPollution += amount;
+        currentPollution = Mathf.Max(0, currentPollution + amount);
         UpdateUI();
     }
 
@@ -69,18 +76,40 @@ public class PollutionManager : MonoBehaviour
         return currentPollution;
     }
 
+    /// <summary>
+    /// Returns the AQI tier color for a given pollution value.
+    /// </summary>
+    public static Color GetAQIColor(int aqi)
+    {
+        if (aqi <= 40)
+            return new Color(0.2f, 0.85f, 0.3f);      // Green
+        else if (aqi <= 70)
+            return new Color(1f, 0.85f, 0f);            // Yellow
+        else if (aqi <= 120)
+            return new Color(1f, 0.55f, 0.1f);           // Orange
+        else
+            return new Color(1f, 0.2f, 0.2f);            // Red
+    }
+
     private void UpdateUI()
     {
         if (pollutionText != null)
         {
-            pollutionText.text = "Pollution: " + currentPollution;
+            pollutionText.text = "AQI: " + currentPollution;
 
-            if (currentPollution < 0)
-                pollutionText.color = new Color(0.2f, 0.8f, 0.2f); // Green
-            else if (currentPollution < 50)
-                pollutionText.color = new Color(1f, 0.8f, 0f);     // Yellow
-            else
-                pollutionText.color = new Color(1f, 0.2f, 0.2f);   // Red
+            Color tierColor = GetAQIColor(currentPollution);
+            pollutionText.color = tierColor;
+
+            // Tint the background panel to a subtle version of the tier color
+            if (bgImage != null)
+            {
+                bgImage.color = new Color(
+                    tierColor.r * 0.15f,
+                    tierColor.g * 0.15f,
+                    tierColor.b * 0.15f,
+                    0.85f
+                );
+            }
         }
     }
 }

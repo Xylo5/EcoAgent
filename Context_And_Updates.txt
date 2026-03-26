@@ -5,7 +5,7 @@ CONTEXT
 ================================================================================
 - Game: Eco, a 3D city builder (Clash of Clans style) in Unity (URP + new Input System).
 - Core Mechanics: 100x100 grid building placement (place, relocate, demolish), RTS camera.
-- Scenes: MainMenu, LevelSelect, Level_0 (Gameplay), MapGenerator (WFC/Grid Generator).
+- Scenes: MainMenu, LevelSelect, Level_1 (Gameplay), MapGenerator (WFC/Grid Generator).
 - Assets: SimplePoly City low-poly pack.
 
 ================================================================================
@@ -15,7 +15,7 @@ PROJECT STRUCTURE
 SCENES (Assets/Scenes/):
   - MainMenu.unity        — Title screen with Start and Quit buttons.
   - LevelSelect.unity     — Level selection with 5 buttons (only Level 1 enabled).
-  - Level_0.unity          — Main gameplay scene with grid, camera, building system.
+  - Level_1.unity          — Main gameplay scene with grid, camera, building system.
   - MapGenerator.unity     — WFC procedural city generation scene.
 
 SCRIPTABLE OBJECT ASSETS:
@@ -133,8 +133,8 @@ EDITOR SCRIPTS (Assets/Editor/) — 8 Scripts
 ================================================================================
 
 1. AddCityGeneratorToLevel.cs (EditorWindow)
-   - Menu: Tools > EcoAgent > Setup City Generator in Level_0.
-   - Opens Level_0, creates/finds WFCCityGenerator GO, wires GridManager + terrain +
+   - Menu: Tools > EcoAgent > Setup City Generator in Level_1.
+   - Opens Level_1, creates/finds WFCCityGenerator GO, wires GridManager + terrain +
      DefaultAdjacencyRules, saves scene.
 
 2. AssignSimplePolyTextures.cs (EditorWindow)
@@ -160,7 +160,7 @@ EDITOR SCRIPTS (Assets/Editor/) — 8 Scripts
 6. SceneBuilderEditor.cs (EditorWindow)
    - Menu: Tools > Build All Scenes.
    - Full scene setup: creates MainMenu (title, start/quit buttons) and LevelSelect (5 level
-     buttons, grid layout, back button) scenes with TextMeshPro UI; adds LevelHUD to Level_0;
+     buttons, grid layout, back button) scenes with TextMeshPro UI; adds LevelHUD to Level_1;
      registers all scenes in Build Settings. Green/blue theme.
 
 7. SimplePolySetup.cs (EditorWindow)
@@ -197,7 +197,7 @@ UPDATE 4 — Automated Setup Tool:
 UPDATE 5 — Full Scene System:
    - SceneBuilderEditor.cs: Tools > Build All Scenes.
    - Created MainMenu, LevelSelect scenes with full TextMeshPro UI.
-   - Added LevelHUD to Level_0 with Back button.
+   - Added LevelHUD to Level_1 with Back button.
    - All scenes registered in Build Settings.
 
 UPDATE 6 — UI & Navigation Scripts:
@@ -233,7 +233,7 @@ UPDATE 11 — RTS Camera & Input:
 
 UPDATE 12 — City Generation Editor Tools:
    - CityPlaceholderCreator.cs: Creates 5 CityTileData + adjacency rules.
-   - AddCityGeneratorToLevel.cs: Wires WFCCityGenerator into Level_0 scene.
+   - AddCityGeneratorToLevel.cs: Wires WFCCityGenerator into Level_1 scene.
    - WFCCityGeneratorEditor.cs: Custom Inspector with Generate/Clear buttons.
    - PrefabSizeMeasurer.cs: Logs SimplePoly prefab bounds to console.
 
@@ -258,7 +258,7 @@ UPDATE 15 — Input & Null Reference Fixes:
 UPDATE 16 — Input & Null Reference Fixes (Part 2):
    - InputManager.cs: Changed Instance from auto-property to lazy-init singleton.
      If no InputManager exists in the scene, one is auto-created via FindFirstObjectByType
-     or instantiated fresh. Fixes NullReferenceException when playing Level_0 directly
+     or instantiated fresh. Fixes NullReferenceException when playing Level_1 directly
      without going through MainMenu. Also initializes Keyboard/Mouse device refs in Awake()
      so they're available on frame 0.
    - BuildingPlacer.cs: Added EventSystem.IsPointerOverGameObject() guard in HandleConfirmCancel()

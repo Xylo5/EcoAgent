@@ -38,7 +38,7 @@ public class BuildingUIWiring
 
         if (buildingUI == null)
         {
-            Debug.LogError("No BuildingUI component found in the current scene. Open Level_0 scene first.");
+            Debug.LogError("No BuildingUI component found in the current scene. Open Level_1 scene first.");
             return;
         }
 

@@ -10,13 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: Hut
+  m_Name: Gas Station
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: Hut
+  buildingName: Gas Station
+  description: Promotes fossil fuel usage, increases air pollution and carbon emissions
   icon: {fileID: 0}
-  sizeX: 4
-  sizeZ: 4
-  prefab: {fileID: 100000, guid: 4dc7028a3a83758439585b7c7c98cb27, type: 3}
+  sizeX: 3
+  sizeZ: 5
+  prefab: {fileID: 100000, guid: 260808cfd9b21994d8c3007a7bc9934c, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: 50
+  pollutionValue: 8
+  frequency: 2

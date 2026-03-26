@@ -3,7 +3,7 @@
 ## Terrain
 - **Position**: (-50, 0, -50)
 - **Size**: 350 x 350 world units
-- **Scene**: Assets/Scenes/Level_0.unity
+- **Scene**: Assets/Scenes/Level_1.unity
 
 ## GridManager (Assets/Scripts/GridManager.cs)
 Manages a 100x100 cell grid centered on the terrain.

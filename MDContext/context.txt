@@ -5,7 +5,7 @@ ECO PROJECT — FULL CONTEXT
 PROJECT OVERVIEW
 Unity 6000.3.8f1 city builder game ("Eco") with URP.
 Player places buildings on a grid overlaid on terrain.
-Main scene: Assets/Scenes/Level_0.unity
+Main scene: Assets/Scenes/Level_1.unity
 
 ================================================================================
 ACTIVE SCRIPTS (Assets/Scripts/)
@@ -22,13 +22,13 @@ BuildingData.cs         — ScriptableObject for building definitions (name, des
 LevelRequirements.cs    — ScriptableObject: per-level required BuildingData[] list
 CameraController.cs     — Camera movement
 PlacedBuilding.cs       — Tracks placed building state
-PollutionManager.cs     — Pollution system with opaque HUD background
+PollutionManager.cs     — AQI pollution system: clamped to min 0, 4-tier colors (green/yellow/orange/red), background tint
 CityGenerator.cs        — Procedural city builder: 2-phase generation, frequency weighting, density curve
 TerrainEdgeFog.cs       — Runtime fog quads around terrain edges (uses Custom/EdgeFog shader)
 EdgeFog.shader          — URP transparent unlit shader for terrain edge fog (Assets/Shaders/)
 RequiredBuildingsUI.cs  — "REQUIRED" button + expandable checklist + map scan for required buildings
 BuildingUI.cs           — Building selection UI: centered 4-col grid layout + 2s hover tooltip
-LevelHUD.cs             — In-game HUD with Check + Required buttons, gates win on buildings + pollution
+LevelHUD.cs             — In-game HUD with Check + Required buttons, AQI-based leaf rating evaluation
 MainMenuUI.cs           — Main menu
 PlacementConfirmUI.cs   — Confirm/cancel building placement
 LevelSelectUI.cs        — Level selection screen
@@ -37,8 +37,8 @@ GridCellHighlighter.cs  — Highlights grid cells (rectangular support)
 SceneLoader.cs          — Scene loading utility (MainMenu, LevelSelect, Level_N, Result)
 EnvironmentData.cs      — ScriptableObject for environment objects
 EnvironmentObject.cs    — Environment object component
-ResultData.cs           — Static class: passes pollution score, win/lose, allBuildingsPlaced, level index
-ResultUI.cs             — Code-generated result screen (win/lose, score, hint, retry/level select)
+ResultData.cs           — Static class: passes AQI score, win/lose, allBuildingsPlaced, level index, leaf rating, result message
+ResultUI.cs             — Code-generated result screen: AQI display, leaf rating (1–3 🍃), tier badge, color-coded
 
 EDITOR SCRIPTS (Assets/Editor/)
 RoadGeneratorEditor.cs      — Generate All/Clear All/Log Prefab Scales buttons
@@ -415,48 +415,56 @@ SCENES (Assets/Scenes/)
 ================================================================================
 MainMenu.unity          — Main menu screen
 LevelSelect.unity       — Level selection (5 buttons, only Level 1 enabled)
-Level_0.unity           — Main gameplay level
+Level_1.unity           — Main gameplay level
 Result.unity            — Win/lose result screen (code-generated UI)
 
 ================================================================================
-WIN/LOSE CHECK SYSTEM
+AQI CHECK & LEAF RATING SYSTEM
 ================================================================================
 Flow: LevelHUD (Check button) → ResultData → SceneLoader.LoadResult() → ResultUI
-Win condition: pollution < 0 AND all required buildings placed.
+Pass condition: all required buildings placed AND AQI ≤ 120.
 
 CHECK BUTTON (LevelHUD.cs):
-  - Code-generated orange button in bottom-right corner of Level 0 HUD
+  - Code-generated orange button in bottom-right corner of Level HUD
   - On click: reads PollutionManager.GetPollution() + RequiredBuildingsUI.AreAllRequirementsMet()
-  - Win condition: pollution < 0 AND allBuildingsPlaced
-  - Sets ResultData static fields (PollutionScore, Won, AllBuildingsPlaced, LevelIndex)
-  - Calls SceneLoader.LoadResult() to transition to Result scene
+  - Evaluation logic:
+      Missing buildings → Fail ("Not all required buildings placed.")
+      AQI > 120        → Fail ("AQI is too high!")
+      AQI 71–120       → Pass, 1 leaf ("Pollution can be reduced")
+      AQI 41–70        → Pass, 2 leaves ("Good Efforts")
+      AQI 0–40         → Pass, 3 leaves ("Excellent Management")
+  - Sets ResultData static fields and calls SceneLoader.LoadResult()
 
 RESULT DATA (ResultData.cs):
   Static class for passing data between scenes (no MonoBehaviour needed):
-    ResultData.PollutionScore      — int, final pollution value
-    ResultData.Won                 — bool, true if pollution < 0 AND all buildings placed
+    ResultData.PollutionScore      — int, final AQI value
+    ResultData.Won                 — bool, true if AQI ≤ 120 AND all buildings placed
     ResultData.AllBuildingsPlaced  — bool, true if every required building has a placed instance
     ResultData.LevelIndex          — int, which level was played (for retry)
+    ResultData.LeafRating          — int, 0 = fail, 1–3 = pass tiers
+    ResultData.ResultMessage       — string, tier-specific message
 
 RESULT SCENE (ResultUI.cs):
   Fully code-generated UI at runtime — no manual Canvas/EventSystem setup needed.
   BuildUI() creates at Start():
     - Canvas (ScreenSpaceOverlay, 1920x1080 reference)
-    - EventSystem + InputSystemUIInputModule (new Input System, not StandaloneInputModule)
+    - EventSystem + InputSystemUIInputModule (new Input System)
     - Dark background overlay
-    - Center panel with:
-      - Title: green "YOU WIN!" or red "YOU LOSE"
-      - Score: "Pollution: N"
-      - Hint: "Pollution is below 0!" (win), "Not all required buildings were placed." (missing),
-              or "Reduce pollution below 0 to win." (pollution too high)
-      - "Level Select" button → SceneLoader.LoadLevelSelect()
-      - "Retry" button → SceneLoader.LoadLevel(ResultData.LevelIndex)
+    - Center panel (650×520, dark semi-transparent) with:
+      - Title: green "LEVEL COMPLETE" or red "LEVEL FAILED"
+      - AQI label + large AQI value (color-coded by tier)
+      - Tier badge: EXCELLENT / GOOD / MODERATE / POOR
+      - Leaf rating row: 3 leaf icons (🍃), filled = green, unfilled = gray
+      - Result message (tier-specific text from ResultData)
+      - "LEVEL SELECT" button → SceneLoader.LoadLevelSelect()
+      - "RETRY" button → SceneLoader.LoadLevel(ResultData.LevelIndex)
+      - ESC hint text
   Escape key also returns to Level Select.
 
 ================================================================================
 REQUIRED BUILDINGS CHECKLIST (RequiredBuildingsUI.cs)
 ================================================================================
-MonoBehaviour attached to a GameObject in Level_0.
+MonoBehaviour attached to a GameObject in Level_1.
 Displays a blue "REQUIRED" button directly above the orange "CHECK" button.
 
 INSPECTOR FIELDS:
@@ -550,25 +558,29 @@ BUILDING DATA — frequency field (BuildingData.cs):
   Every type always spawns at least once regardless of frequency.
 
 ================================================================================
-POLLUTION UI (PollutionManager.cs)
+AQI POLLUTION UI (PollutionManager.cs)
 ================================================================================
-Singleton (PollutionManager.Instance). Tracks total pollution, starts at 100.
+Singleton (PollutionManager.Instance). Tracks AQI (pollution), starts at 100.
+Clamped to minimum 0 — no negative values.
 
 UI DISPLAY:
   pollutionText      TextMeshProUGUI   Inspector reference to the text element
-  At runtime, creates a dark opaque background panel ("PollutionBG") behind the text:
-    - Color: (0.1, 0.1, 0.14, 0.85)
+  Displays "AQI: N" (not "Pollution: N")
+  At runtime, creates a background panel ("PollutionBG") behind the text:
     - Size: 320×50, anchored top-center, 6px from top
+    - Background color tints to subtly match the current AQI tier
     - Text is re-parented under the background so it renders on top
 
-COLOR CODING:
-  pollution < 0   → green (0.2, 0.8, 0.2)
-  pollution < 50  → yellow (1, 0.8, 0)
-  pollution >= 50 → red (1, 0.2, 0.2)
+AQI COLOR TIERS:
+  0–40   → Green  (0.2, 0.85, 0.3)
+  41–70  → Yellow (1.0, 0.85, 0.0)
+  71–120 → Orange (1.0, 0.55, 0.1)
+  121+   → Red    (1.0, 0.2, 0.2)
 
 PUBLIC API:
-  AddPollution(int amount) — called by BuildingPlacer after placement
-  GetPollution()           — returns current pollution (used by LevelHUD.OnCheck)
+  AddPollution(int amount)     — called by BuildingPlacer after placement (clamped to min 0)
+  GetPollution()               — returns current AQI (used by LevelHUD.OnCheck)
+  GetAQIColor(int aqi) [static]— returns tier color for any AQI value (used by ResultUI)
 
 ================================================================================
 BUILDING SHOP UI (BuildingUI.cs)

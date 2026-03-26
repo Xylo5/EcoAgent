@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: Factory
+  m_Name: Market
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: Factory
-  description: Major source of pollution (air, water, and soil) and high carbon emissions.
+  buildingName: Market
+  description: Supports local economy but generates waste and increases traffic emissions.
   icon: {fileID: 0}
-  sizeX: 7
-  sizeZ: 9
-  prefab: {fileID: 100000, guid: f6674c1362ba984468bc1e71a2323d66, type: 3}
+  sizeX: 5
+  sizeZ: 5
+  prefab: {fileID: 4722627683411591535, guid: 580e175accc4f644e8c5daa4090d0293, type: 3}
   scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: 100
-  frequency: 5
+  pollutionValue: 10
+  frequency: 1

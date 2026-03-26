@@ -10,14 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: Office
+  m_Name: Factory
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: Office
+  buildingName: Factory
+  description: Major source of pollution (air, water, and soil) and high carbon emissions.
   icon: {fileID: 0}
-  sizeX: 6
-  sizeZ: 6
-  prefab: {fileID: 4508651562860150202, guid: 6d3bd000f9d3e3c479ee0339e54f1247, type: 3}
+  sizeX: 7
+  sizeZ: 9
+  prefab: {fileID: 100000, guid: f6674c1362ba984468bc1e71a2323d66, type: 3}
   scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: 75
+  pollutionValue: 25
+  frequency: 5

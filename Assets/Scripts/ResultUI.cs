@@ -5,9 +5,12 @@ using UnityEngine.InputSystem.UI;
 using TMPro;
 
 /// <summary>
-/// Result screen shown after checking pollution.
+/// Result screen shown after checking AQI.
 /// Builds the entire UI at runtime — no manual scene setup needed.
 /// Reads ResultData static fields set before scene load.
+///
+/// Shows: Title, AQI value (color-coded), leaf rating (1–3 🍃), 
+/// result message, and navigation buttons.
 /// </summary>
 public class ResultUI : MonoBehaviour
 {
@@ -24,15 +27,22 @@ public class ResultUI : MonoBehaviour
 
     private void BuildUI()
     {
-        // Canvas
+        bool won = ResultData.Won;
+        int aqi = ResultData.PollutionScore;
+        int leaves = ResultData.LeafRating;
+        string message = ResultData.ResultMessage ?? "";
+
+        // ── Canvas ──
         GameObject canvasObj = new GameObject("ResultCanvas");
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        canvasObj.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
+        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
         canvasObj.AddComponent<GraphicRaycaster>();
 
-        // EventSystem (required for button clicks)
+        // ── EventSystem ──
         if (FindAnyObjectByType<EventSystem>() == null)
         {
             GameObject esObj = new GameObject("EventSystem");
@@ -40,62 +50,145 @@ public class ResultUI : MonoBehaviour
             esObj.AddComponent<InputSystemUIInputModule>();
         }
 
-        // Background overlay
+        // ── Full-screen background ──
         GameObject bgObj = new GameObject("Background");
         bgObj.transform.SetParent(canvasObj.transform, false);
         Image bg = bgObj.AddComponent<Image>();
-        bg.color = new Color(0.08f, 0.08f, 0.12f, 1f);
+        bg.color = new Color(0.06f, 0.06f, 0.10f, 1f);
         RectTransform bgRt = bgObj.GetComponent<RectTransform>();
         bgRt.anchorMin = Vector2.zero;
         bgRt.anchorMax = Vector2.one;
         bgRt.sizeDelta = Vector2.zero;
 
-        // Center panel
+        // ── Center panel ──
         GameObject panel = new GameObject("Panel");
         panel.transform.SetParent(canvasObj.transform, false);
-        RectTransform panelRt = panel.AddComponent<RectTransform>();
+        Image panelImg = panel.AddComponent<Image>();
+        panelImg.color = new Color(0.10f, 0.10f, 0.16f, 0.92f);
+        RectTransform panelRt = panel.GetComponent<RectTransform>();
         panelRt.anchorMin = new Vector2(0.5f, 0.5f);
         panelRt.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRt.sizeDelta = new Vector2(600, 400);
+        panelRt.sizeDelta = new Vector2(650, 520);
         panelRt.anchoredPosition = Vector2.zero;
 
-        // Win/Lose title
-        bool won = ResultData.Won;
-        CreateText(panel.transform, "TitleText",
-            won ? "YOU WIN!" : "YOU LOSE",
-            won ? new Color(0.2f, 0.9f, 0.3f) : new Color(1f, 0.25f, 0.25f),
-            60, new Vector2(0, 120));
+        // ── Title ──
+        Color titleColor = won
+            ? new Color(0.2f, 0.9f, 0.35f)
+            : new Color(1f, 0.25f, 0.25f);
+        string titleText = won ? "LEVEL COMPLETE" : "LEVEL FAILED";
+        CreateText(panel.transform, "TitleText", titleText, titleColor,
+            52, FontStyles.Bold, new Vector2(0, 190));
 
-        // Pollution score
-        CreateText(panel.transform, "ScoreText",
-            "Pollution: " + ResultData.PollutionScore,
-            Color.white, 36, new Vector2(0, 30));
+        // ── Divider line ──
+        GameObject divider = new GameObject("Divider");
+        divider.transform.SetParent(panel.transform, false);
+        Image divImg = divider.AddComponent<Image>();
+        divImg.color = new Color(1f, 1f, 1f, 0.12f);
+        RectTransform divRt = divider.GetComponent<RectTransform>();
+        divRt.anchorMin = new Vector2(0.5f, 0.5f);
+        divRt.anchorMax = new Vector2(0.5f, 0.5f);
+        divRt.sizeDelta = new Vector2(500, 2);
+        divRt.anchoredPosition = new Vector2(0, 148);
 
-        // Threshold hint
-        string hintMsg;
-        if (won)
-            hintMsg = "Pollution is below 0!";
-        else if (!ResultData.AllBuildingsPlaced)
-            hintMsg = "Not all required buildings were placed.";
-        else
-            hintMsg = "Reduce pollution below 0 to win.";
+        // ── AQI Label ──
+        CreateText(panel.transform, "AQILabel", "AIR QUALITY INDEX",
+            new Color(0.6f, 0.6f, 0.7f), 20, FontStyles.Normal, new Vector2(0, 115));
 
-        CreateText(panel.transform, "HintText",
-            hintMsg,
-            new Color(0.7f, 0.7f, 0.7f), 22, new Vector2(0, -20));
+        // ── AQI Value (large, color-coded) ──
+        Color aqiColor = PollutionManager.GetAQIColor(aqi);
+        CreateText(panel.transform, "AQIValue", aqi.ToString(),
+            aqiColor, 72, FontStyles.Bold, new Vector2(0, 68));
 
-        // Buttons
-        CreateButton(panel.transform, "LevelSelectBtn", "Level Select",
-            new Vector2(-120, -120), new Color(0.2f, 0.5f, 0.8f),
+        // ── AQI Tier Badge ──
+        string tierLabel = GetTierLabel(aqi);
+        CreateText(panel.transform, "TierBadge", tierLabel,
+            aqiColor, 22, FontStyles.Bold, new Vector2(0, 28));
+
+        // ── Leaf Rating Row ──
+        if (won && leaves > 0)
+        {
+            CreateLeafDisplay(panel.transform, leaves, new Vector2(0, -20));
+        }
+
+        // ── Result Message ──
+        Color msgColor = won ? new Color(0.8f, 0.9f, 0.8f) : new Color(0.85f, 0.65f, 0.65f);
+        CreateText(panel.transform, "ResultMessage", message,
+            msgColor, 26, FontStyles.Italic, new Vector2(0, -75));
+
+        // ── Buttons ──
+        CreateButton(panel.transform, "LevelSelectBtn", "LEVEL SELECT",
+            new Vector2(-140, -170), new Color(0.18f, 0.40f, 0.70f),
             () => SceneLoader.LoadLevelSelect());
 
-        CreateButton(panel.transform, "RetryBtn", "Retry",
-            new Vector2(120, -120), new Color(0.2f, 0.7f, 0.4f),
+        CreateButton(panel.transform, "RetryBtn", "RETRY",
+            new Vector2(140, -170), new Color(0.18f, 0.60f, 0.35f),
             () => SceneLoader.LoadLevel(ResultData.LevelIndex));
+
+        // ── Hint text ──
+        CreateText(panel.transform, "HintText", "ESC to go back",
+            new Color(0.45f, 0.45f, 0.55f, 0.6f), 16, FontStyles.Normal,
+            new Vector2(0, -225));
+    }
+
+    private string GetTierLabel(int aqi)
+    {
+        if (aqi <= 40) return "EXCELLENT";
+        if (aqi <= 70) return "GOOD";
+        if (aqi <= 120) return "MODERATE";
+        return "POOR";
+    }
+
+    private void CreateLeafDisplay(Transform parent, int filledCount, Vector2 position)
+    {
+        GameObject container = new GameObject("LeafRating");
+        container.transform.SetParent(parent, false);
+        RectTransform containerRt = container.AddComponent<RectTransform>();
+        containerRt.anchorMin = new Vector2(0.5f, 0.5f);
+        containerRt.anchorMax = new Vector2(0.5f, 0.5f);
+        containerRt.sizeDelta = new Vector2(300, 60);
+        containerRt.anchoredPosition = position;
+
+        float spacing = 60f;
+        float startX = -spacing;
+
+        for (int i = 0; i < 3; i++)
+        {
+            bool filled = (i < filledCount);
+
+            // Outer leaf shape (rotated 45° diamond)
+            GameObject leafObj = new GameObject("Leaf_" + (i + 1));
+            leafObj.transform.SetParent(container.transform, false);
+
+            Image leafImg = leafObj.AddComponent<Image>();
+            leafImg.color = filled
+                ? new Color(0.25f, 0.90f, 0.40f)  // Bright green
+                : new Color(0.25f, 0.25f, 0.30f);  // Dim gray
+
+            RectTransform rt = leafObj.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(30, 30);
+            rt.anchoredPosition = new Vector2(startX + i * spacing, 0);
+            rt.localRotation = UnityEngine.Quaternion.Euler(0, 0, 45); // Diamond shape
+
+            // Inner dot for visual detail
+            GameObject dotObj = new GameObject("Dot");
+            dotObj.transform.SetParent(leafObj.transform, false);
+            Image dotImg = dotObj.AddComponent<Image>();
+            dotImg.color = filled
+                ? new Color(0.15f, 0.70f, 0.25f)  // Darker green center
+                : new Color(0.18f, 0.18f, 0.22f);  // Darker gray center
+
+            RectTransform dotRt = dotObj.GetComponent<RectTransform>();
+            dotRt.anchorMin = new Vector2(0.5f, 0.5f);
+            dotRt.anchorMax = new Vector2(0.5f, 0.5f);
+            dotRt.sizeDelta = new Vector2(12, 12);
+            dotRt.anchoredPosition = Vector2.zero;
+        }
     }
 
     private void CreateText(Transform parent, string name, string content,
-        Color color, int fontSize, Vector2 position)
+        Color color, int fontSize, FontStyles style, Vector2 position)
     {
         GameObject obj = new GameObject(name);
         obj.transform.SetParent(parent, false);
@@ -103,11 +196,14 @@ public class ResultUI : MonoBehaviour
         tmp.text = content;
         tmp.color = color;
         tmp.fontSize = fontSize;
+        tmp.fontStyle = style;
         tmp.alignment = TextAlignmentOptions.Center;
+        tmp.enableWordWrapping = true;
+        tmp.overflowMode = TextOverflowModes.Overflow;
         RectTransform rt = obj.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(500, 70);
+        rt.sizeDelta = new Vector2(550, 70);
         rt.anchoredPosition = position;
     }
 
@@ -121,10 +217,16 @@ public class ResultUI : MonoBehaviour
         Button btn = btnObj.AddComponent<Button>();
         btn.onClick.AddListener(onClick);
 
+        ColorBlock cb = btn.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+        cb.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+        btn.colors = cb;
+
         RectTransform rt = btnObj.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(200, 55);
+        rt.sizeDelta = new Vector2(220, 55);
         rt.anchoredPosition = position;
 
         // Button label
@@ -133,7 +235,8 @@ public class ResultUI : MonoBehaviour
         TextMeshProUGUI tmp = labelObj.AddComponent<TextMeshProUGUI>();
         tmp.text = label;
         tmp.color = Color.white;
-        tmp.fontSize = 26;
+        tmp.fontSize = 24;
+        tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Center;
         RectTransform labelRt = labelObj.GetComponent<RectTransform>();
         labelRt.anchorMin = Vector2.zero;

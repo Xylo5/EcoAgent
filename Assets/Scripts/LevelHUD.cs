@@ -87,8 +87,44 @@ public class LevelHUD : MonoBehaviour
 
         ResultData.PollutionScore = pollution;
         ResultData.AllBuildingsPlaced = allBuildings;
-        ResultData.Won = pollution < 0 && allBuildings;
-        ResultData.LevelIndex = 0; // Level_0
+        ResultData.LevelIndex = 0; // Level_1
+
+        // --- Evaluate result ---
+        if (!allBuildings)
+        {
+            // Fail: missing required buildings
+            ResultData.Won = false;
+            ResultData.LeafRating = 0;
+            ResultData.ResultMessage = "Not all required buildings placed.";
+        }
+        else if (pollution > 120)
+        {
+            // Fail: AQI too high
+            ResultData.Won = false;
+            ResultData.LeafRating = 0;
+            ResultData.ResultMessage = "AQI is too high!";
+        }
+        else if (pollution >= 71)
+        {
+            // Pass: 1 leaf (71–120)
+            ResultData.Won = true;
+            ResultData.LeafRating = 1;
+            ResultData.ResultMessage = "Pollution can be reduced";
+        }
+        else if (pollution >= 41)
+        {
+            // Pass: 2 leaves (41–70)
+            ResultData.Won = true;
+            ResultData.LeafRating = 2;
+            ResultData.ResultMessage = "Good Efforts";
+        }
+        else
+        {
+            // Pass: 3 leaves (0–40)
+            ResultData.Won = true;
+            ResultData.LeafRating = 3;
+            ResultData.ResultMessage = "Excellent Management";
+        }
 
         SceneLoader.LoadResult();
     }

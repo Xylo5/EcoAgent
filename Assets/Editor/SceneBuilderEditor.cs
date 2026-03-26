@@ -9,7 +9,7 @@ using System.IO;
 
 /// <summary>
 /// Editor utility: Tools → Build All Scenes
-/// Creates MainMenu and LevelSelect scenes, renames SampleScene to Level_0,
+/// Creates MainMenu and LevelSelect scenes, renames SampleScene to Level_1,
 /// wires up all UI, and registers scenes in Build Settings.
 /// </summary>
 public class SceneBuilderEditor : EditorWindow
@@ -20,19 +20,19 @@ public class SceneBuilderEditor : EditorWindow
         // Save any open scene first
         EditorSceneManager.SaveOpenScenes();
 
-        // --- Step 1: Rename SampleScene → Level_0 ---
+        // --- Step 1: Rename SampleScene → Level_1 ---
         string scenesFolder = "Assets/Scenes";
         string oldScenePath = scenesFolder + "/SampleScene.unity";
-        string newScenePath = scenesFolder + "/Level_0.unity";
+        string newScenePath = scenesFolder + "/Level_1.unity";
 
         if (File.Exists(oldScenePath) && !File.Exists(newScenePath))
         {
-            AssetDatabase.RenameAsset(oldScenePath, "Level_0");
-            Debug.Log("[SceneBuilder] Renamed SampleScene → Level_0");
+            AssetDatabase.RenameAsset(oldScenePath, "Level_1");
+            Debug.Log("[SceneBuilder] Renamed SampleScene → Level_1");
         }
         else if (!File.Exists(oldScenePath) && !File.Exists(newScenePath))
         {
-            Debug.LogWarning("[SceneBuilder] SampleScene.unity not found and Level_0.unity doesn't exist either.");
+            Debug.LogWarning("[SceneBuilder] SampleScene.unity not found and Level_1.unity doesn't exist either.");
         }
 
         // --- Step 2: Create MainMenu scene ---
@@ -41,7 +41,7 @@ public class SceneBuilderEditor : EditorWindow
         // --- Step 3: Create LevelSelect scene ---
         BuildLevelSelectScene(scenesFolder + "/LevelSelect.unity");
 
-        // --- Step 4: Add LevelHUD to Level_0 ---
+        // --- Step 4: Add LevelHUD to Level_1 ---
         AddLevelHUDToLevel(newScenePath);
 
         // --- Step 5: Register all scenes in Build Settings ---
@@ -305,7 +305,7 @@ public class SceneBuilderEditor : EditorWindow
         List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>();
         scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/MainMenu.unity",   true));
         scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/LevelSelect.unity", true));
-        scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_0.unity",     true));
+        scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_1.unity",     true));
         EditorBuildSettings.scenes = scenes.ToArray();
         Debug.Log("[SceneBuilder] Registered 3 scenes in Build Settings.");
     }

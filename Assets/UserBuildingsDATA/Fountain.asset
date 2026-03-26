@@ -10,13 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: House
+  m_Name: Fountain
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: House
+  buildingName: Fountain
+  description: Improves local microclimate and aesthetics; can slightly reduce heat
+    and boost citizen happiness.
   icon: {fileID: 0}
-  sizeX: 4
-  sizeZ: 4
-  prefab: {fileID: 100000, guid: 92dcd407350173049ab8c86482fadf42, type: 3}
+  sizeX: 2
+  sizeZ: 2
+  prefab: {fileID: 3114417195942607655, guid: fd3703a0ce3a3ec4182e648231b7ed0f, type: 3}
+  scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: 60
+  pollutionValue: -3
+  frequency: 1

@@ -10,17 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: Park
+  m_Name: Water Treatmet Plant
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: Park
-  description: Major air purification, reduces urban heat island effect, and enhances
-    biodiversity.
+  buildingName: Water Treatmet Plant
+  description: Cleans water and prevents pollution of natural water bodies.
   icon: {fileID: 0}
-  sizeX: 8
-  sizeZ: 8
-  prefab: {fileID: 3569189689274469721, guid: 074669bd8be09b245aa232afa23fd3f6, type: 3}
+  sizeX: 5
+  sizeZ: 5
+  prefab: {fileID: 4900100287479819167, guid: a0a487818fc12b8478fa6efcb4f382bc, type: 3}
   scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: -90
+  pollutionValue: -6
   frequency: 1

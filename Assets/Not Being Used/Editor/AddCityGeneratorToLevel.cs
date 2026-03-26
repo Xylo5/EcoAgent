@@ -4,29 +4,29 @@ using UnityEditor.SceneManagement;
 using System.IO;
 
 /// <summary>
-/// Editor utility: Tools → EcoAgent → Setup City Generator in Level_0
-/// Opens Level_0, finds or creates a WFCCityGenerator GameObject,
+/// Editor utility: Tools → EcoAgent → Setup City Generator in Level_1
+/// Opens Level_1, finds or creates a WFCCityGenerator GameObject,
 /// wires it to the existing GridManager and terrain, assigns the
 /// DefaultAdjacencyRules asset, and saves the scene.
 /// </summary>
 public class AddCityGeneratorToLevel : EditorWindow
 {
-    private const string LevelScenePath = "Assets/Scenes/Level_0.unity";
+    private const string LevelScenePath = "Assets/Scenes/Level_1.unity";
     private const string AdjacencyRulePath = "Assets/CityData/DefaultAdjacencyRules.asset";
 
-    [MenuItem("Tools/EcoAgent/Setup City Generator in Level_0")]
+    [MenuItem("Tools/EcoAgent/Setup City Generator in Level_1")]
     public static void SetupCityGenerator()
     {
         // ── Validate scene file exists ──
         if (!File.Exists(LevelScenePath))
         {
             EditorUtility.DisplayDialog("Error",
-                "Level_0.unity not found at:\n" + LevelScenePath +
+                "Level_1.unity not found at:\n" + LevelScenePath +
                 "\n\nRun Tools > Build All Scenes first.", "OK");
             return;
         }
 
-        // ── Save current scene and open Level_0 ──
+        // ── Save current scene and open Level_1 ──
         EditorSceneManager.SaveOpenScenes();
         var scene = EditorSceneManager.OpenScene(LevelScenePath, OpenSceneMode.Single);
 
@@ -85,9 +85,9 @@ public class AddCityGeneratorToLevel : EditorWindow
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
 
-        Debug.Log("[AddCityGenerator] ✓ CityGenerator added to Level_0 and wired to GridManager.");
+        Debug.Log("[AddCityGenerator] ✓ CityGenerator added to Level_1 and wired to GridManager.");
         EditorUtility.DisplayDialog("Done",
-            "CityGenerator added to Level_0!\n\n" +
+            "CityGenerator added to Level_1!\n\n" +
             "1. Select 'CityGenerator' in the Hierarchy\n" +
             "2. Click 'Generate City' in the Inspector\n" +
             "3. Click 'Clear City' to remove generated tiles",

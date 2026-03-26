@@ -10,16 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: Gas Station
+  m_Name: Garden
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: Gas Station
-  description: Promotes fossil fuel usage, increases air pollution and carbon emissions
+  buildingName: Garden
+  description: Increases green cover, absorbs CO2, improves air quality, and supports
+    biodiversity.
   icon: {fileID: 0}
   sizeX: 3
-  sizeZ: 5
-  prefab: {fileID: 100000, guid: 260808cfd9b21994d8c3007a7bc9934c, type: 3}
+  sizeZ: 3
+  prefab: {fileID: 4395644689892268942, guid: aa3642d3cfa255a4397c2212a601d809, type: 3}
   scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: 95
-  frequency: 2
+  pollutionValue: -8
+  frequency: 1

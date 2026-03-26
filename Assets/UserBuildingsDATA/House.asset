@@ -10,17 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4102b1b6f7a4089458d6ccb9e970876f, type: 3}
-  m_Name: Farm
+  m_Name: House
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingName: Farm
-  description: Provides food sustainably if managed well, but can cause deforestation,
-    water usage, and soil depletion.
+  buildingName: House
+  description: A useful building for your city.
   icon: {fileID: 0}
-  sizeX: 10
-  sizeZ: 10
-  prefab: {fileID: 8460503563806827883, guid: e94774417d5f22a4099dd86262fc7094, type: 3}
+  sizeX: 4
+  sizeZ: 4
+  prefab: {fileID: 100000, guid: 92dcd407350173049ab8c86482fadf42, type: 3}
   scaleMultiplier: 1.1
   validColor: {r: 0, g: 1, b: 0, a: 0.5}
   invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
-  pollutionValue: -60
+  pollutionValue: 5
   frequency: 1
