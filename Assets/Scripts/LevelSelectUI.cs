@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Level selection screen.
-/// Shows 5 level buttons (only Level 1 is enabled for now).
+/// Shows 5 level buttons (all unlocked).
 /// Keyboard: Arrow keys / Tab to navigate, Enter to select, Escape for back.
 /// </summary>
 public class LevelSelectUI : MonoBehaviour
@@ -18,7 +18,7 @@ public class LevelSelectUI : MonoBehaviour
     public Color highlightColor = new Color(0.20f, 0.75f, 0.45f, 1f);
 
     private int selectedIndex = 0;
-    private int enabledLevelCount = 1; // only Level 1 (index 0) is playable
+    private int enabledLevelCount = 5; // all 5 levels unlocked
     private Image[] buttonImages;
 
     void Start()

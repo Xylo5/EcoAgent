@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 /// <summary>
@@ -87,7 +88,16 @@ public class LevelHUD : MonoBehaviour
 
         ResultData.PollutionScore = pollution;
         ResultData.AllBuildingsPlaced = allBuildings;
-        ResultData.LevelIndex = 0; // Level_1
+
+        // Auto-detect level index from scene name (e.g. "Level_3" → index 2)
+        string sceneName = SceneManager.GetActiveScene().name;
+        int levelIndex = 0;
+        if (sceneName.StartsWith("Level_"))
+        {
+            int.TryParse(sceneName.Substring(6), out int sceneNum);
+            levelIndex = sceneNum - 1; // Level_1 = index 0, Level_2 = index 1, etc.
+        }
+        ResultData.LevelIndex = levelIndex;
 
         // --- Evaluate result ---
         if (!allBuildings)

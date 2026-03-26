@@ -202,12 +202,9 @@ public class SceneBuilderEditor : EditorWindow
         Button[] levelButtons = new Button[5];
         for (int i = 0; i < 5; i++)
         {
-            bool unlocked = (i == 0);
-            string label = unlocked ? "Level " + (i + 1) : "Level " + (i + 1) + "\n(Locked)";
-            Color col = unlocked ? enabledCol : disabledCol;
-            Color textCol = unlocked
-                ? new Color(0.95f, 0.97f, 0.95f)
-                : new Color(0.50f, 0.50f, 0.52f);
+            string label = "Level " + (i + 1);
+            Color col = enabledCol;
+            Color textCol = new Color(0.95f, 0.97f, 0.95f);
 
             GameObject btn = CreateStyledButton(container.transform,
                 "LevelBtn_" + i, label, col, textCol, 26);
@@ -306,8 +303,12 @@ public class SceneBuilderEditor : EditorWindow
         scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/MainMenu.unity",   true));
         scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/LevelSelect.unity", true));
         scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_1.unity",     true));
+        scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_2.unity",     true));
+        scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_3.unity",     true));
+        scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_4.unity",     true));
+        scenes.Add(new EditorBuildSettingsScene(scenesFolder + "/Level_5.unity",     true));
         EditorBuildSettings.scenes = scenes.ToArray();
-        Debug.Log("[SceneBuilder] Registered 3 scenes in Build Settings.");
+        Debug.Log("[SceneBuilder] Registered 8 scenes in Build Settings.");
     }
 
     // ═════════════════════════════════════════════════
