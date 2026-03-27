@@ -16,6 +16,7 @@ CityGenerator.cs        — Procedural building placement near roads (scene-view
 BuildingPlacer.cs       — Mouse-based building placement on grid; triggers RequiredBuildingsUI scan
 BuildingPlaceAnimation.cs — Rise-from-ground placement anim + dust particles + sound hook
 BorderForestSpawner.cs  — Decorative trees around grid border
+CoastalBorderSpawner.cs — Beach/coast border for Level_2: ocean water plane, sand cubes, rocks, beach-to-forest transition
 EnvironmentSpawner.cs   — Spawns environment objects, marks cells permanent
 CityTileData.cs         — ScriptableObject: tileName, sizeInCells, prefabs[]
 BuildingData.cs         — ScriptableObject for building definitions (name, description, size, pollution, prefab, frequency)
@@ -31,7 +32,7 @@ BuildingUI.cs           — Building selection UI: centered 4-col grid layout + 
 LevelHUD.cs             — In-game HUD with Check + Required buttons, AQI-based leaf rating evaluation
 MainMenuUI.cs           — Main menu
 PlacementConfirmUI.cs   — Confirm/cancel building placement
-LevelSelectUI.cs        — Level selection screen
+LevelSelectUI.cs        — Level selection screen (all 5 levels unlocked)
 InputManager.cs         — Input handling (R key for building rotation)
 GridCellHighlighter.cs  — Highlights grid cells (rectangular support)
 SceneLoader.cs          — Scene loading utility (MainMenu, LevelSelect, Level_N, Result)
@@ -41,9 +42,12 @@ ResultData.cs           — Static class: passes AQI score, win/lose, allBuildin
 ResultUI.cs             — Code-generated result screen: AQI display, leaf rating (1–3 🍃), tier badge, color-coded
 
 EDITOR SCRIPTS (Assets/Editor/)
-RoadGeneratorEditor.cs      — Generate All/Clear All/Log Prefab Scales buttons
-CityGeneratorEditor.cs      — Generate Buildings/Clear Buildings buttons
-CreateResultScene.cs        — Tools > Create Result Scene (one-time scene + Build Settings setup)
+RoadGeneratorEditor.cs          — Generate All/Clear All/Log Prefab Scales buttons
+CityGeneratorEditor.cs          — Generate Buildings/Clear Buildings buttons
+CreateResultScene.cs            — Tools > Create Result Scene (one-time scene + Build Settings setup)
+CoastalBorderSpawnerEditor.cs   — Inspector: Spawn/Clear Coast buttons for CoastalBorderSpawner
+LevelSceneSetup.cs              — Tools > Setup All Level Scenes (copies Level_1 → Level_2–5)
+RegisterAllScenes.cs            — Tools > Register All Scenes In Build Settings (8 scenes)
 
 UNUSED SCRIPTS (Assets/Not Being Used/)
 WFCCityGenerator.cs, CityTileAdjacencyRule.cs
@@ -414,8 +418,12 @@ Supports full Undo via Undo.RegisterFullObjectHierarchyUndo().
 SCENES (Assets/Scenes/)
 ================================================================================
 MainMenu.unity          — Main menu screen
-LevelSelect.unity       — Level selection (5 buttons, only Level 1 enabled)
-Level_1.unity           — Main gameplay level
+LevelSelect.unity       — Level selection (5 buttons, all unlocked)
+Level_1.unity           — Gameplay level 1 (forest border)
+Level_2.unity           — Gameplay level 2 (coastal border)
+Level_3.unity           — Gameplay level 3
+Level_4.unity           — Gameplay level 4
+Level_5.unity           — Gameplay level 5
 Result.unity            — Win/lose result screen (code-generated UI)
 
 ================================================================================
