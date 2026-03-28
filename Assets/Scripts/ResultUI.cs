@@ -14,6 +14,9 @@ using TMPro;
 /// </summary>
 public class ResultUI : MonoBehaviour
 {
+    [Header("Make A Change Links")]
+    public string directActionUrl = "https://pgportal.gov.in/";
+    public string raiseAwarenessUrl = "https://www.change.org/search?q=pollution%20india";
     void Start()
     {
         BuildUI();
@@ -69,7 +72,7 @@ public class ResultUI : MonoBehaviour
         panelRt.anchorMin = new Vector2(0.5f, 0.5f);
         panelRt.anchorMax = new Vector2(0.5f, 0.5f);
         panelRt.sizeDelta = new Vector2(650, 520);
-        panelRt.anchoredPosition = Vector2.zero;
+        panelRt.anchoredPosition = new Vector2(0, 80);
 
         // ── Title ──
         Color titleColor = won
@@ -128,6 +131,78 @@ public class ResultUI : MonoBehaviour
         CreateText(panel.transform, "HintText", "ESC to go back",
             new Color(0.45f, 0.45f, 0.55f, 0.6f), 16, FontStyles.Normal,
             new Vector2(0, -225));
+
+        // ── "Make A Change" Box (separate panel below) ──
+        BuildMakeAChangeBox(canvasObj.transform);
+    }
+
+    private void BuildMakeAChangeBox(Transform canvasTransform)
+    {
+        // ── Container panel ──
+        GameObject box = new GameObject("MakeAChangeBox");
+        box.transform.SetParent(canvasTransform, false);
+        Image boxImg = box.AddComponent<Image>();
+        boxImg.color = new Color(0.10f, 0.10f, 0.16f, 0.92f);
+        RectTransform boxRt = box.GetComponent<RectTransform>();
+        boxRt.anchorMin = new Vector2(0.5f, 0.5f);
+        boxRt.anchorMax = new Vector2(0.5f, 0.5f);
+        boxRt.sizeDelta = new Vector2(650, 130);
+        boxRt.anchoredPosition = new Vector2(0, -230);
+
+        // ── Heading ──
+        CreateText(box.transform, "MakeAChangeTitle", "MAKE A CHANGE",
+            new Color(0.95f, 0.85f, 0.35f), 30, FontStyles.Bold,
+            new Vector2(0, 28));
+
+        // ── Link buttons row ──
+        CreateLinkButton(box.transform, "DirectActionLink", "Direct Action",
+            new Vector2(-140, -30), new Color(0.30f, 0.75f, 0.95f),
+            directActionUrl);
+
+        CreateLinkButton(box.transform, "RaiseAwarenessLink", "Raise Awareness",
+            new Vector2(140, -30), new Color(0.30f, 0.75f, 0.95f),
+            raiseAwarenessUrl);
+    }
+
+    private void CreateLinkButton(Transform parent, string name, string label,
+        Vector2 position, Color textColor, string url)
+    {
+        GameObject obj = new GameObject(name);
+        obj.transform.SetParent(parent, false);
+
+        // Invisible background for click area
+        Image bg = obj.AddComponent<Image>();
+        bg.color = new Color(0f, 0f, 0f, 0f);
+
+        Button btn = obj.AddComponent<Button>();
+        btn.onClick.AddListener(() => Application.OpenURL(url));
+
+        // No color tint on the invisible bg
+        ColorBlock cb = btn.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = Color.white;
+        cb.pressedColor = Color.white;
+        btn.colors = cb;
+
+        RectTransform rt = obj.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(220, 40);
+        rt.anchoredPosition = position;
+
+        // Link-style text with underline
+        GameObject labelObj = new GameObject("Label");
+        labelObj.transform.SetParent(obj.transform, false);
+        TextMeshProUGUI tmp = labelObj.AddComponent<TextMeshProUGUI>();
+        tmp.text = "<u>" + label + "</u>";
+        tmp.color = textColor;
+        tmp.fontSize = 22;
+        tmp.fontStyle = FontStyles.Normal;
+        tmp.alignment = TextAlignmentOptions.Center;
+        RectTransform labelRt = labelObj.GetComponent<RectTransform>();
+        labelRt.anchorMin = Vector2.zero;
+        labelRt.anchorMax = Vector2.one;
+        labelRt.sizeDelta = Vector2.zero;
     }
 
     private string GetTierLabel(int aqi)

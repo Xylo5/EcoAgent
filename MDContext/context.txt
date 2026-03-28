@@ -39,7 +39,7 @@ SceneLoader.cs          — Scene loading utility (MainMenu, LevelSelect, Level_
 EnvironmentData.cs      — ScriptableObject for environment objects
 EnvironmentObject.cs    — Environment object component
 ResultData.cs           — Static class: passes AQI score, win/lose, allBuildingsPlaced, level index, leaf rating, result message
-ResultUI.cs             — Code-generated result screen: AQI display, leaf rating (1–3 🍃), tier badge, color-coded
+ResultUI.cs             — Code-generated result screen: AQI display, leaf rating (1–3 🍃), tier badge, color-coded, "Make A Change" CTA box
 
 EDITOR SCRIPTS (Assets/Editor/)
 RoadGeneratorEditor.cs          — Generate All/Clear All/Log Prefab Scales buttons
@@ -454,11 +454,16 @@ RESULT DATA (ResultData.cs):
 
 RESULT SCENE (ResultUI.cs):
   Fully code-generated UI at runtime — no manual Canvas/EventSystem setup needed.
+
+  INSPECTOR FIELDS:
+    directActionUrl       string    "https://pgportal.gov.in/"                           URL opened by "Direct Action" link
+    raiseAwarenessUrl     string    "https://www.change.org/search?q=pollution%20india"   URL opened by "Raise Awareness" link
+
   BuildUI() creates at Start():
     - Canvas (ScreenSpaceOverlay, 1920x1080 reference)
     - EventSystem + InputSystemUIInputModule (new Input System)
     - Dark background overlay
-    - Center panel (650×520, dark semi-transparent) with:
+    - Center panel (650×520, dark semi-transparent, pushed UP to anchoredPosition (0, 80)):
       - Title: green "LEVEL COMPLETE" or red "LEVEL FAILED"
       - AQI label + large AQI value (color-coded by tier)
       - Tier badge: EXCELLENT / GOOD / MODERATE / POOR
@@ -467,6 +472,11 @@ RESULT SCENE (ResultUI.cs):
       - "LEVEL SELECT" button → SceneLoader.LoadLevelSelect()
       - "RETRY" button → SceneLoader.LoadLevel(ResultData.LevelIndex)
       - ESC hint text
+    - "Make A Change" box (650×130, separate panel below result panel at (0, -230)):
+      - "MAKE A CHANGE" heading (gold/yellow, bold)
+      - "Direct Action" underlined link → opens directActionUrl via Application.OpenURL()
+      - "Raise Awareness" underlined link → opens raiseAwarenessUrl via Application.OpenURL()
+      - Always shown (win or lose)
   Escape key also returns to Level Select.
 
 ================================================================================
