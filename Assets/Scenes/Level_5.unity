@@ -262363,6 +262363,61 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 976704173}
   m_Mesh: {fileID: 6823648544484320847, guid: 3f3a78e33d1f8ed4eb31f6c67d12ed76, type: 3}
+--- !u!1 &977197716
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 977197718}
+  - component: {fileID: 977197717}
+  m_Layer: 0
+  m_Name: CityNameUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &977197717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 977197716}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f6ea117839d3c44eba89228d16aed01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CityNameUI
+  cityName: My City
+  boxSize: {x: 220, y: 50}
+  boxOffset: {x: 20, y: -15}
+  boxColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.6}
+  cornerRadius: 8
+  backgroundImage: {fileID: 0}
+  imageAlpha: 0.6
+  fontSize: 22
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  fontStyle: 1
+  fontAsset: {fileID: 0}
+--- !u!4 &977197718
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 977197716}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 95.05563, y: 0, z: 190.81209}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &977579995
 GameObject:
   m_ObjectHideFlags: 0
@@ -576553,3 +576608,4 @@ SceneRoots:
   - {fileID: 1631707935}
   - {fileID: 1840471872}
   - {fileID: 80830286}
+  - {fileID: 977197718}

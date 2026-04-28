@@ -4,10 +4,10 @@ using TMPro;
 using System.Collections.Generic;
 
 /// <summary>
-/// Displays a "REQUIRED" button above the Check button in Level HUD.
-/// Clicking it toggles a checklist of required buildings.
-/// Each entry shows "<buildingName> must be built" in red (missing) or green (placed).
-/// Call ScanForBuildings() after any placement/demolition to refresh the checklist.
+/// Displays a "Development Goals" panel in the top-left, directly below the city name box.
+/// Always visible — shows a checklist of required buildings with live status indicators.
+/// Each entry updates in real-time: ✗ (red) when missing, ✓ (green) when placed.
+/// Call ScanForBuildings() after any placement/demolition to refresh.
 /// </summary>
 public class RequiredBuildingsUI : MonoBehaviour
 {
@@ -15,16 +15,42 @@ public class RequiredBuildingsUI : MonoBehaviour
     [Tooltip("Assign the LevelRequirements ScriptableObject for this level.")]
     public LevelRequirements levelRequirements;
 
+    [Header("Panel Position")]
+    [Tooltip("Offset from top-left corner. Align below CityNameUI (default: x=20, y=-75).")]
+    public Vector2 panelOffset = new Vector2(20f, -75f);
+    [Tooltip("Width of the panel.")]
+    public float panelWidth = 240f;
+
+    [Header("Panel Style")]
+    [Tooltip("Background color of the panel (use alpha for semi-transparency).")]
+    public Color panelColor = new Color(0.08f, 0.08f, 0.12f, 0.55f);
+    [Tooltip("Color of the header title.")]
+    public Color headerColor = new Color(0.95f, 0.85f, 0.45f, 1f);
+    [Tooltip("Font size for the header.")]
+    public float headerFontSize = 16f;
+    [Tooltip("Font size for list items.")]
+    public float itemFontSize = 14f;
+
+    [Header("Status Colors")]
+    [Tooltip("Color for completed requirements.")]
+    public Color completedColor = new Color(0.3f, 0.9f, 0.4f, 1f);
+    [Tooltip("Color for incomplete requirements.")]
+    public Color incompleteColor = new Color(1f, 0.4f, 0.35f, 0.9f);
+
     // ── Internal state ──
-    private bool isExpanded = false;
-    private GameObject checklistPanel;
-    private List<TextMeshProUGUI> checklistTexts = new List<TextMeshProUGUI>();
+    private GameObject panelObj;
+    private List<TextMeshProUGUI> itemTexts = new List<TextMeshProUGUI>();
+    private List<TextMeshProUGUI> statusIcons = new List<TextMeshProUGUI>();
     private List<bool> requirementsMet = new List<bool>();
 
-    // Colors
-    private readonly Color metColor = new Color(0.2f, 0.85f, 0.3f);   // Green
-    private readonly Color unmetColor = new Color(1f, 0.25f, 0.25f);   // Red
-    private readonly Color buttonColor = new Color(0.3f, 0.55f, 0.9f); // Blue
+    // Layout constants
+    private const float HEADER_HEIGHT = 32f;
+    private const float ITEM_HEIGHT = 26f;
+    private const float DIVIDER_HEIGHT = 1f;
+    private const float PADDING_TOP = 10f;
+    private const float PADDING_BOTTOM = 10f;
+    private const float PADDING_HORIZONTAL = 14f;
+    private const float ICON_WIDTH = 24f;
 
     void Start()
     {
@@ -61,11 +87,19 @@ public class RequiredBuildingsUI : MonoBehaviour
                 }
             }
 
-            requirementsMet[i] = found;
+            if (i < requirementsMet.Count)
+                requirementsMet[i] = found;
 
-            if (i < checklistTexts.Count && checklistTexts[i] != null)
+            // Update visual
+            if (i < statusIcons.Count && statusIcons[i] != null)
             {
-                checklistTexts[i].color = found ? metColor : unmetColor;
+                statusIcons[i].text = found ? "✓" : "✗";
+                statusIcons[i].color = found ? completedColor : incompleteColor;
+            }
+            if (i < itemTexts.Count && itemTexts[i] != null)
+            {
+                itemTexts[i].color = found ? completedColor : incompleteColor;
+                itemTexts[i].fontStyle = found ? FontStyles.Strikethrough : FontStyles.Normal;
             }
         }
     }
@@ -76,7 +110,7 @@ public class RequiredBuildingsUI : MonoBehaviour
     public bool AreAllRequirementsMet()
     {
         if (levelRequirements == null || levelRequirements.requiredBuildings == null)
-            return true; // No requirements = always met
+            return true;
 
         for (int i = 0; i < requirementsMet.Count; i++)
         {
@@ -96,69 +130,39 @@ public class RequiredBuildingsUI : MonoBehaviour
             canvas = FindAnyObjectByType<Canvas>();
         if (canvas == null) return;
 
-        // ── "REQUIRED" button ──
-        // Check button is at anchoredPosition (-20, 20) with size (160, 50).
-        // Place this button directly above it.
-        GameObject btnObj = new GameObject("RequiredButton");
-        btnObj.transform.SetParent(canvas.transform, false);
-        Image btnImg = btnObj.AddComponent<Image>();
-        btnImg.color = buttonColor;
-        Button btn = btnObj.AddComponent<Button>();
-        btn.onClick.AddListener(ToggleChecklist);
-
-        RectTransform btnRt = btnObj.GetComponent<RectTransform>();
-        btnRt.anchorMin = new Vector2(1f, 0f);
-        btnRt.anchorMax = new Vector2(1f, 0f);
-        btnRt.pivot = new Vector2(1f, 0f);
-        btnRt.sizeDelta = new Vector2(160, 50);
-        btnRt.anchoredPosition = new Vector2(-20, 80); // Above Check button (20 + 50 + 10 gap)
-
-        // Button label
-        GameObject labelObj = new GameObject("Label");
-        labelObj.transform.SetParent(btnObj.transform, false);
-        TextMeshProUGUI labelTmp = labelObj.AddComponent<TextMeshProUGUI>();
-        labelTmp.text = "REQUIRED";
-        labelTmp.color = Color.white;
-        labelTmp.fontSize = 24;
-        labelTmp.fontStyle = FontStyles.Bold;
-        labelTmp.alignment = TextAlignmentOptions.Center;
-        RectTransform labelRt = labelObj.GetComponent<RectTransform>();
-        labelRt.anchorMin = Vector2.zero;
-        labelRt.anchorMax = Vector2.one;
-        labelRt.sizeDelta = Vector2.zero;
-
-        // ── Checklist panel (starts hidden) ──
-        CreateChecklistPanel(canvas.transform, btnRt);
-    }
-
-    private void CreateChecklistPanel(Transform canvasTransform, RectTransform buttonRt)
-    {
         if (levelRequirements == null || levelRequirements.requiredBuildings == null) return;
-
         int count = levelRequirements.requiredBuildings.Length;
         if (count == 0) return;
 
-        float rowHeight = 35f;
-        float padding = 10f;
-        float panelHeight = count * rowHeight + padding * 2;
-        float panelWidth = 280f;
+        // Calculate panel height
+        float contentHeight = PADDING_TOP + HEADER_HEIGHT + DIVIDER_HEIGHT + (count * ITEM_HEIGHT) + PADDING_BOTTOM;
 
-        // Panel anchored bottom-right, sitting above the REQUIRED button
-        checklistPanel = new GameObject("ChecklistPanel");
-        checklistPanel.transform.SetParent(canvasTransform, false);
-        Image panelImg = checklistPanel.AddComponent<Image>();
-        panelImg.color = new Color(0.1f, 0.1f, 0.15f, 0.9f); // Dark semi-transparent
+        // ── Panel container ──
+        panelObj = new GameObject("DevelopmentGoalsPanel");
+        panelObj.transform.SetParent(canvas.transform, false);
 
-        RectTransform panelRt = checklistPanel.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(1f, 0f);
-        panelRt.anchorMax = new Vector2(1f, 0f);
-        panelRt.pivot = new Vector2(1f, 0f);
-        panelRt.sizeDelta = new Vector2(panelWidth, panelHeight);
-        // Position above the REQUIRED button: button is at y=80, height=50, so panel starts at y=140
-        panelRt.anchoredPosition = new Vector2(-20, 140);
+        Image panelImg = panelObj.AddComponent<Image>();
+        panelImg.color = panelColor;
+        panelImg.raycastTarget = false;
 
-        // Create checklist entries
-        checklistTexts.Clear();
+        RectTransform panelRt = panelObj.GetComponent<RectTransform>();
+        panelRt.anchorMin = new Vector2(0f, 1f);
+        panelRt.anchorMax = new Vector2(0f, 1f);
+        panelRt.pivot = new Vector2(0f, 1f);
+        panelRt.sizeDelta = new Vector2(panelWidth, contentHeight);
+        panelRt.anchoredPosition = panelOffset;
+
+        float yOffset = -PADDING_TOP;
+
+        // ── Header: "DEVELOPMENT GOALS" ──
+        yOffset = CreateHeader(panelObj.transform, yOffset);
+
+        // ── Thin divider line ──
+        yOffset = CreateDivider(panelObj.transform, yOffset);
+
+        // ── Requirement list items ──
+        itemTexts.Clear();
+        statusIcons.Clear();
         requirementsMet.Clear();
 
         for (int i = 0; i < count; i++)
@@ -166,43 +170,117 @@ public class RequiredBuildingsUI : MonoBehaviour
             BuildingData bd = levelRequirements.requiredBuildings[i];
             if (bd == null) continue;
 
-            GameObject textObj = new GameObject("Req_" + bd.buildingName);
-            textObj.transform.SetParent(checklistPanel.transform, false);
-            TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
-            tmp.text = bd.buildingName + " must be built";
-            tmp.color = unmetColor;
-            tmp.fontSize = 18;
-            tmp.fontStyle = FontStyles.Normal;
-            tmp.alignment = TextAlignmentOptions.Left;
-
-            RectTransform textRt = textObj.GetComponent<RectTransform>();
-            textRt.anchorMin = new Vector2(0f, 1f);
-            textRt.anchorMax = new Vector2(1f, 1f);
-            textRt.pivot = new Vector2(0.5f, 1f);
-            textRt.sizeDelta = new Vector2(-padding * 2, rowHeight);
-            textRt.anchoredPosition = new Vector2(0, -(padding + i * rowHeight));
-
-            checklistTexts.Add(tmp);
+            yOffset = CreateListItem(panelObj.transform, yOffset, bd.buildingName, i);
             requirementsMet.Add(false);
         }
-
-        // Start collapsed
-        checklistPanel.SetActive(false);
     }
 
-    // ═══════════════════════════════════════════
-    //  TOGGLE
-    // ═══════════════════════════════════════════
-
-    private void ToggleChecklist()
+    private float CreateHeader(Transform parent, float yOffset)
     {
-        if (checklistPanel == null) return;
+        // Header container for left-aligned title
+        GameObject headerObj = new GameObject("Header");
+        headerObj.transform.SetParent(parent, false);
 
-        isExpanded = !isExpanded;
-        checklistPanel.SetActive(isExpanded);
+        TextMeshProUGUI headerText = headerObj.AddComponent<TextMeshProUGUI>();
+        headerText.text = "DEVELOPMENT GOALS";
+        headerText.color = headerColor;
+        headerText.fontSize = headerFontSize;
+        headerText.fontStyle = FontStyles.Bold;
+        headerText.alignment = TextAlignmentOptions.Left;
+        headerText.enableWordWrapping = false;
+        headerText.raycastTarget = false;
 
-        // Refresh when opening
-        if (isExpanded)
-            ScanForBuildings();
+        // Add letter spacing for a premium feel
+        headerText.characterSpacing = 2.5f;
+
+        RectTransform rt = headerObj.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.sizeDelta = new Vector2(-PADDING_HORIZONTAL * 2, HEADER_HEIGHT);
+        rt.anchoredPosition = new Vector2(0f, yOffset);
+
+        return yOffset - HEADER_HEIGHT;
+    }
+
+    private float CreateDivider(Transform parent, float yOffset)
+    {
+        GameObject divObj = new GameObject("Divider");
+        divObj.transform.SetParent(parent, false);
+
+        Image divImg = divObj.AddComponent<Image>();
+        // Subtle gradient-like divider
+        divImg.color = new Color(headerColor.r, headerColor.g, headerColor.b, 0.3f);
+        divImg.raycastTarget = false;
+
+        RectTransform rt = divObj.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.sizeDelta = new Vector2(-PADDING_HORIZONTAL * 2, DIVIDER_HEIGHT);
+        rt.anchoredPosition = new Vector2(0f, yOffset - 2f);
+
+        return yOffset - DIVIDER_HEIGHT - 4f;
+    }
+
+    private float CreateListItem(Transform parent, float yOffset, string buildingName, int index)
+    {
+        // ── Row container ──
+        GameObject rowObj = new GameObject("Goal_" + buildingName);
+        rowObj.transform.SetParent(parent, false);
+
+        RectTransform rowRt = rowObj.AddComponent<RectTransform>();
+        rowRt.anchorMin = new Vector2(0f, 1f);
+        rowRt.anchorMax = new Vector2(1f, 1f);
+        rowRt.pivot = new Vector2(0.5f, 1f);
+        rowRt.sizeDelta = new Vector2(-PADDING_HORIZONTAL * 2, ITEM_HEIGHT);
+        rowRt.anchoredPosition = new Vector2(0f, yOffset);
+
+        // ── Status icon (✗ / ✓) ──
+        GameObject iconObj = new GameObject("StatusIcon");
+        iconObj.transform.SetParent(rowObj.transform, false);
+
+        TextMeshProUGUI iconText = iconObj.AddComponent<TextMeshProUGUI>();
+        iconText.text = "✗";
+        iconText.color = incompleteColor;
+        iconText.fontSize = itemFontSize + 2;
+        iconText.fontStyle = FontStyles.Bold;
+        iconText.alignment = TextAlignmentOptions.Left;
+        iconText.enableWordWrapping = false;
+        iconText.raycastTarget = false;
+
+        RectTransform iconRt = iconObj.GetComponent<RectTransform>();
+        iconRt.anchorMin = new Vector2(0f, 0f);
+        iconRt.anchorMax = new Vector2(0f, 1f);
+        iconRt.pivot = new Vector2(0f, 0.5f);
+        iconRt.sizeDelta = new Vector2(ICON_WIDTH, 0f);
+        iconRt.anchoredPosition = new Vector2(0f, 0f);
+
+        statusIcons.Add(iconText);
+
+        // ── Building name text ──
+        GameObject nameObj = new GameObject("Name");
+        nameObj.transform.SetParent(rowObj.transform, false);
+
+        TextMeshProUGUI nameText = nameObj.AddComponent<TextMeshProUGUI>();
+        nameText.text = buildingName;
+        nameText.color = incompleteColor;
+        nameText.fontSize = itemFontSize;
+        nameText.fontStyle = FontStyles.Normal;
+        nameText.alignment = TextAlignmentOptions.Left;
+        nameText.enableWordWrapping = false;
+        nameText.overflowMode = TextOverflowModes.Ellipsis;
+        nameText.raycastTarget = false;
+
+        RectTransform nameRt = nameObj.GetComponent<RectTransform>();
+        nameRt.anchorMin = new Vector2(0f, 0f);
+        nameRt.anchorMax = new Vector2(1f, 1f);
+        nameRt.pivot = new Vector2(0.5f, 0.5f);
+        nameRt.offsetMin = new Vector2(ICON_WIDTH, 0f); // left edge after icon
+        nameRt.offsetMax = new Vector2(0f, 0f);
+
+        itemTexts.Add(nameText);
+
+        return yOffset - ITEM_HEIGHT;
     }
 }

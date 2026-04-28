@@ -98,12 +98,6 @@ public class BuildingUI : MonoBehaviour
                 SelectBuilding(selectedIndex);
             }
         }
-
-        // Escape = close submenu
-        if (InputManager.Instance.GetEscapeDown())
-        {
-            HideSubmenu();
-        }
     }
 
     // ═══════════════════════════════════════════
@@ -116,40 +110,39 @@ public class BuildingUI : MonoBehaviour
         Canvas canvas = shopPanel.GetComponentInParent<Canvas>();
         if (canvas == null) return;
 
-        // Create button using the same prefab
-        buildingsButtonObj = Instantiate(buttonPrefab, canvas.transform);
-        buildingsButtonObj.name = "Btn_Buildings_Fixed";
+        // ── Create button programmatically (matching CHECK & REQUIRED style) ──
+        buildingsButtonObj = new GameObject("Btn_Buildings_Fixed");
+        buildingsButtonObj.transform.SetParent(canvas.transform, false);
 
-        // Set text
-        TextMeshProUGUI btnText = buildingsButtonObj.GetComponentInChildren<TextMeshProUGUI>();
-        if (btnText != null)
-            btnText.text = "Buildings";
+        Image btnImg = buildingsButtonObj.AddComponent<Image>();
+        btnImg.color = new Color(0.15f, 0.55f, 0.30f, 1f); // Green
 
-        // Style the button
-        Image btnImage = buildingsButtonObj.GetComponent<Image>();
-        if (btnImage != null)
-            btnImage.color = new Color(0.15f, 0.55f, 0.30f, 1f); // Green like menu button
+        Button btn = buildingsButtonObj.AddComponent<Button>();
+        btn.onClick.AddListener(ToggleSubmenu);
 
-        // Position at top-right, anchored to top-right corner
+        // Anchor top-right
         RectTransform rect = buildingsButtonObj.GetComponent<RectTransform>();
-        if (rect != null)
-        {
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-20f, -10f); // 20px from right, 10px from top
-            rect.sizeDelta = new Vector2(140f, 45f);
-        }
+        rect.anchorMin = new Vector2(1f, 1f);
+        rect.anchorMax = new Vector2(1f, 1f);
+        rect.pivot = new Vector2(1f, 1f);
+        rect.sizeDelta = new Vector2(160f, 50f);
+        rect.anchoredPosition = new Vector2(-20f, -15f);
 
-        // Mouse click → toggle submenu
-        EventTrigger trigger = buildingsButtonObj.GetComponent<EventTrigger>();
-        if (trigger == null)
-            trigger = buildingsButtonObj.AddComponent<EventTrigger>();
+        // Label — same style as CHECK and REQUIRED
+        GameObject labelObj = new GameObject("Label");
+        labelObj.transform.SetParent(buildingsButtonObj.transform, false);
+        TextMeshProUGUI labelTmp = labelObj.AddComponent<TextMeshProUGUI>();
+        labelTmp.text = "BUILDINGS";
+        labelTmp.color = Color.white;
+        labelTmp.fontSize = 24;
+        labelTmp.fontStyle = FontStyles.Bold;
+        labelTmp.alignment = TextAlignmentOptions.Center;
 
-        EventTrigger.Entry clickEntry = new EventTrigger.Entry();
-        clickEntry.eventID = EventTriggerType.PointerClick;
-        clickEntry.callback.AddListener((_) => ToggleSubmenu());
-        trigger.triggers.Add(clickEntry);
+        RectTransform labelRt = labelObj.GetComponent<RectTransform>();
+        labelRt.anchorMin = Vector2.zero;
+        labelRt.anchorMax = Vector2.one;
+        labelRt.sizeDelta = Vector2.zero;
+        labelRt.anchoredPosition = Vector2.zero;
     }
 
     void ToggleSubmenu()

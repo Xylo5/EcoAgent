@@ -66995,6 +66995,61 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 268444590}
   m_Mesh: {fileID: 3532244630321482697, guid: f016ff53f66c6344aaf638adaf433920, type: 3}
+--- !u!1 &268871233
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 268871235}
+  - component: {fileID: 268871234}
+  m_Layer: 0
+  m_Name: CityNameUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &268871234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 268871233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f6ea117839d3c44eba89228d16aed01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CityNameUI
+  cityName: Rajasthan
+  boxSize: {x: 220, y: 50}
+  boxOffset: {x: 20, y: -15}
+  boxColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.6}
+  cornerRadius: 8
+  backgroundImage: {fileID: 0}
+  imageAlpha: 0.6
+  fontSize: 22
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  fontStyle: 1
+  fontAsset: {fileID: 0}
+--- !u!4 &268871235
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 268871233}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 95.05563, y: 0, z: 190.81209}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &269091338
 GameObject:
   m_ObjectHideFlags: 0
@@ -193293,6 +193348,65 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 738053278}
   m_Mesh: {fileID: -6569524906540915261, guid: f016ff53f66c6344aaf638adaf433920, type: 3}
+--- !u!1 &738332521
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 738332523}
+  - component: {fileID: 738332522}
+  m_Layer: 0
+  m_Name: DesertBorderSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &738332522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738332521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d2fcac6ea84a8a4cb0d198179378cdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DesertBorderSpawner
+  gridManager: {fileID: 856921998}
+  desertPrefabs:
+  - {fileID: 6304981980776018901, guid: cc9fadb8a79caa94992903911ee6d7d7, type: 3}
+  - {fileID: 4680757731160225450, guid: 0fde05fa0f3321942a21896ff4f0856f, type: 3}
+  - {fileID: 8783306491908617939, guid: f02116c209ecd9e488fc4d2cd8996133, type: 3}
+  sandColor: {r: 0.88, g: 0.8, b: 0.52, a: 1}
+  sandColorVariation: 0.06
+  sandTileHeight: 0.12
+  elementChance: 0.2
+  elementSpacing: 4
+  minimumElementDistance: 6
+  elementScaleRange: {x: 0.6, y: 1.5}
+  positionJitter: 0.3
+  spawnOnStart: 1
+  randomSeed: 0
+--- !u!4 &738332523
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738332521}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 95.05563, y: 0, z: 190.81209}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &738347814
 GameObject:
   m_ObjectHideFlags: 0
@@ -322997,64 +323111,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1197866946}
   m_Mesh: {fileID: -5092578263211875437, guid: 7b3290f2ad54b6f4191265c80f55e0fe, type: 3}
---- !u!1 &1198048679
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1198048681}
-  - component: {fileID: 1198048680}
-  m_Layer: 0
-  m_Name: BorderForestSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1198048680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1198048679}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b6df0e1cd858bf48acf74c52d21ad72, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BorderForestSpawner
-  gridManager: {fileID: 856921998}
-  treePrefabs:
-  - {fileID: 6991265809765871834, guid: fea69626389bd194daaf921d168eefe7, type: 3}
-  - {fileID: 1909787429240085703, guid: 9129eef4470bd584d8675065420e67fe, type: 3}
-  - {fileID: 5780771976558420957, guid: a36435a2f79d1f84d88f03fd9c81e176, type: 3}
-  - {fileID: 100000, guid: b82e76f4092b7d24aaeecddf36fe8d3b, type: 3}
-  - {fileID: 100000, guid: 2509cc5763ca17f4598bf61fd585a93e, type: 3}
-  - {fileID: 6304981980776018901, guid: cc9fadb8a79caa94992903911ee6d7d7, type: 3}
-  - {fileID: 3059948811161385093, guid: 29d299ac32b5f83489084748c806a29b, type: 3}
-  treesPerCell: 1.5
-  scaleRange: {x: 0.8, y: 1.4}
-  positionJitter: 0.9
-  spawnOnStart: 1
-  randomSeed: 0
---- !u!4 &1198048681
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1198048679}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 95.30421, y: 3.73001, z: 13.10818}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1198173513
 GameObject:
   m_ObjectHideFlags: 0
@@ -576547,9 +576603,10 @@ SceneRoots:
   - {fileID: 1428764273}
   - {fileID: 246744892}
   - {fileID: 1165901503}
-  - {fileID: 1198048681}
   - {fileID: 392065415}
   - {fileID: 746194371}
   - {fileID: 1631707935}
   - {fileID: 1840471872}
   - {fileID: 80830286}
+  - {fileID: 738332523}
+  - {fileID: 268871235}

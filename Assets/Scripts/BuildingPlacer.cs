@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// Handles building placement with full keyboard controls (CoC-style).
-/// Arrow keys move the ghost tile-by-tile, Enter confirms, Escape cancels.
+/// Arrow keys move the ghost tile-by-tile, Enter confirms, Delete cancels.
 /// Has a 1-frame cooldown after entering placement mode so Enter doesn't
 /// instantly confirm (since BuildingUI also uses Enter to start placing).
 /// </summary>
@@ -146,7 +146,7 @@ public class BuildingPlacer : MonoBehaviour
         UpdateValidity();
 
         Debug.Log("[BuildingPlacer] Placing: " + building.buildingName +
-                  " — Arrow keys to move, R to rotate, Enter to place, Escape to cancel");
+                  " — Arrow keys to move, R to rotate, Enter to place, Delete to cancel");
     }
 
     public void ConfirmPlacement()
@@ -316,7 +316,7 @@ public class BuildingPlacer : MonoBehaviour
     }
 
     // ═══════════════════════════════════════════
-    //  CONFIRM / CANCEL (Enter / Escape)
+    //  CONFIRM / CANCEL (Enter / Delete)
     // ═══════════════════════════════════════════
 
     private void HandleConfirmCancel()
@@ -338,8 +338,8 @@ public class BuildingPlacer : MonoBehaviour
             }
         }
 
-        // Escape = cancel
-        if (InputManager.Instance.GetEscapeDown())
+        // Delete = cancel
+        if (InputManager.Instance.GetDeleteDown())
         {
             Debug.Log("[BuildingPlacer] Placement cancelled.");
             CancelPlacement();

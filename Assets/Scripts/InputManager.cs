@@ -148,6 +148,7 @@ public class InputManager : MonoBehaviour
     }
 
     public bool GetEscapeDown() => kb != null && kb.escapeKey.wasPressedThisFrame;
+    public bool GetDeleteDown() => kb != null && kb.deleteKey.wasPressedThisFrame;
     public bool GetTabDown()    => kb != null && kb.tabKey.wasPressedThisFrame;
     public bool GetShiftHeld()  => kb != null && kb.leftShiftKey.isPressed;
 

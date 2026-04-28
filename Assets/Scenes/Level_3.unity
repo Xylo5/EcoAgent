@@ -219929,6 +219929,65 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 799396201}
   m_Mesh: {fileID: 1634895986789987100, guid: d9b25b32b49ebe241b553e7a5677f407, type: 3}
+--- !u!1 &799629126
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 799629128}
+  - component: {fileID: 799629127}
+  m_Layer: 0
+  m_Name: BorderBuildingSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &799629127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799629126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c17b2cf4fffbb404f9a996bed597f5bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BorderBuildingSpawner
+  gridManager: {fileID: 856921998}
+  buildingPrefabs:
+  - {fileID: 100000, guid: 66131d8838f42f545a30ce8606ce5365, type: 3}
+  - {fileID: 100000, guid: 2dbee28eacba7dd42845e0153c4da642, type: 3}
+  - {fileID: 100000, guid: 35807f23e7899e541b60b2fb2bbb51ef, type: 3}
+  - {fileID: 100000, guid: 4dc7028a3a83758439585b7c7c98cb27, type: 3}
+  spacingMultiplier: 5
+  scaleRange: {x: 0.8, y: 1.2}
+  positionJitter: 0.15
+  minimumBuildingDistance: 4
+  placementChance: 0.8
+  targetBuildingSize: 0
+  normalizeHeight: 1
+  spawnOnStart: 1
+  randomSeed: 0
+--- !u!4 &799629128
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799629126}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 154.49434, y: 0.00001, z: 230.94293}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &799726095
 GameObject:
   m_ObjectHideFlags: 0
@@ -326785,64 +326844,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1197696377}
   m_Mesh: {fileID: 4300040, guid: 72e643619fa32984785527a0c110a313, type: 3}
---- !u!1 &1198048679
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1198048681}
-  - component: {fileID: 1198048680}
-  m_Layer: 0
-  m_Name: BorderForestSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1198048680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1198048679}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b6df0e1cd858bf48acf74c52d21ad72, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BorderForestSpawner
-  gridManager: {fileID: 856921998}
-  treePrefabs:
-  - {fileID: 6991265809765871834, guid: fea69626389bd194daaf921d168eefe7, type: 3}
-  - {fileID: 1909787429240085703, guid: 9129eef4470bd584d8675065420e67fe, type: 3}
-  - {fileID: 5780771976558420957, guid: a36435a2f79d1f84d88f03fd9c81e176, type: 3}
-  - {fileID: 100000, guid: b82e76f4092b7d24aaeecddf36fe8d3b, type: 3}
-  - {fileID: 100000, guid: 2509cc5763ca17f4598bf61fd585a93e, type: 3}
-  - {fileID: 6304981980776018901, guid: cc9fadb8a79caa94992903911ee6d7d7, type: 3}
-  - {fileID: 3059948811161385093, guid: 29d299ac32b5f83489084748c806a29b, type: 3}
-  treesPerCell: 1.5
-  scaleRange: {x: 0.8, y: 1.4}
-  positionJitter: 0.9
-  spawnOnStart: 1
-  randomSeed: 0
---- !u!4 &1198048681
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1198048679}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 95.30421, y: 3.73001, z: 13.10818}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1198058117
 GameObject:
   m_ObjectHideFlags: 0
@@ -326933,6 +326934,61 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1198058117}
   m_Mesh: {fileID: 1687187894724005716, guid: b10ff5f5971703a4bb6fa9c267910d29, type: 3}
+--- !u!1 &1198111718
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1198111720}
+  - component: {fileID: 1198111719}
+  m_Layer: 0
+  m_Name: CityNameUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1198111719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198111718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f6ea117839d3c44eba89228d16aed01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CityNameUI
+  cityName: DELHI
+  boxSize: {x: 220, y: 50}
+  boxOffset: {x: 20, y: -15}
+  boxColor: {r: 0.1, g: 0.1, b: 0.15, a: 0.78431374}
+  cornerRadius: 8
+  backgroundImage: {fileID: 0}
+  imageAlpha: 0.6
+  fontSize: 22
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  fontStyle: 1
+  fontAsset: {fileID: 0}
+--- !u!4 &1198111720
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198111718}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 95.05563, y: 0, z: 190.81209}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1198901829
 GameObject:
   m_ObjectHideFlags: 0
@@ -590425,9 +590481,10 @@ SceneRoots:
   - {fileID: 1428764273}
   - {fileID: 246744892}
   - {fileID: 1165901503}
-  - {fileID: 1198048681}
   - {fileID: 392065415}
   - {fileID: 746194371}
   - {fileID: 1631707935}
   - {fileID: 1840471872}
   - {fileID: 80830286}
+  - {fileID: 799629128}
+  - {fileID: 1198111720}
